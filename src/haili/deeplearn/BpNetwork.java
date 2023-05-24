@@ -1201,6 +1201,7 @@ public class BpNetwork implements Cloneable,Serializable
 					for(int k=0; k<n; k++)
 						delta += upgradeThreadData.hiddenNeuer_delta[i+1][k] * hidden_Neuron[i+1][k].w[j];//w_old[j];
 				}// end if
+
 				delta *= hidden_Neuron[i][j].ACT_function.f_derivative(upgradeThreadData.hiddenNeuer_out_[i][j]);
 				upgradeThreadData.hiddenNeuer_delta[i][j] = delta;
 				//计算更新权值和阀值0
@@ -1234,6 +1235,7 @@ public class BpNetwork implements Cloneable,Serializable
 
 
 	//batch-size>1	批量梯度下降，单线程
+	/*
 	private float upgradeBatch(float[] input, float[] target){
 		//System.out.println("批量梯度下降，单线程");
 		float[] out = out(input);
@@ -1301,6 +1303,7 @@ public class BpNetwork implements Cloneable,Serializable
 
 		return Loss(out,target);
 	}// end upgrade
+	 */
 
 	
 	//初始化

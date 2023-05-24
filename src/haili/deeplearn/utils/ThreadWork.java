@@ -80,6 +80,7 @@ public class ThreadWork {
                             //处理完成,
                             finishNumber[p] = true;
                         }
+
                     }
                 if(flag){
                     finish = true;//已完成
@@ -103,14 +104,15 @@ public class ThreadWork {
 
     }
 
+
     /*
     public static void main(String[] args) {
-        ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(100){
-            int[] ints = new int[100];
+        ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(10){
+            int[] ints = new int[getWorkNumber()];
             @Override
             public void working(int index) {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(200);
                 } catch (InterruptedException exception) {
                     exception.printStackTrace();
                 }
@@ -133,7 +135,16 @@ public class ThreadWork {
         Arrays.sort(d);
         System.out.println(Arrays.toString(d));
 
+        //
+        for( int i = 0; i < d.length; i++){
+            if( i!= d[i] ) System.out.println(i);
+        }
+        System.out.println("end");
+
     }
 
      */
+
+
+
 }
