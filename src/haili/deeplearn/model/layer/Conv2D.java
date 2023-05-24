@@ -47,7 +47,7 @@ public class Conv2D extends Layer{
     /**
      * forward
      * @param inputs = { X01, X02, ..., X0w, X10, X11, X12, ..., X1w, ...., Xhw}, h = input_height, w = input_width
-     * @return out
+     * @return outs
      */
     @Override
     public float[] forward(float[] inputs) {
