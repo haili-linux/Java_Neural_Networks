@@ -6,7 +6,6 @@ import haili.deeplearn.function.Sigmoid;
 import haili.deeplearn.model.layer.Conv2D;
 import haili.deeplearn.model.layer.Dense;
 import haili.deeplearn.model.Sequential;
-import haili.deeplearn.model.layer.Pooling2D;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -93,7 +92,7 @@ public class Test {
 
         for(int i = 0; i < ty.length; i++){
 
-            float[] out = sequential.out(tx[i]);
+            float[] out = sequential.forward(tx[i]);
             if(getMaxIndex(ty[i]) != getMaxIndex(out)) error++;
         }
         System.out.println("error:" + error);
@@ -104,7 +103,7 @@ public class Test {
 
         for(int i = 0; i < 10000; i++){
             for (int j = 0; j < tx.length; j++){
-                sequential.back(tx[j], ty[j]);
+                sequential.backward(tx[j], ty[j]);
             }
             if(i %100 ==0) {
                 System.out.println("epoch: " + i + "    loss: " + sequential.loss(tx, ty));
@@ -115,7 +114,7 @@ public class Test {
         error = 0;
         for(int i = 0; i < ty.length; i++){
 
-            float[] out = sequential.out(tx[i]);
+            float[] out = sequential.forward(tx[i]);
             if(getMaxIndex(ty[i]) != getMaxIndex(out)) error++;
         }
 

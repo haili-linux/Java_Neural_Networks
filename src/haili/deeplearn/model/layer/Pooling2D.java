@@ -4,22 +4,7 @@ import java.util.Arrays;
 
 public class Pooling2D extends Layer{
 
-
-    public static void main(String[] args) {
-        Pooling2D pooling2D = new Pooling2D(4,4, 2, 2);
-        float[] input = new float[16];
-        for(int i = 0; i < input.length; i++) input[i] = i;
-        System.out.println(" Input = " + Arrays.toString(input));
-        System.out.println(" output = " + Arrays.toString(pooling2D.forward(input)));
-
-        float[] deltas = new float[4];
-        for(int i = 0; i < deltas.length; i++) deltas[i] = 5 - i;
-        System.out.println(" deltas = " + Arrays.toString(deltas));
-        System.out.println(" last_layer_deltas = " + Arrays.toString(pooling2D.backward(input,null, deltas)));
-
-    }
-
-
+    
     int kernel_width, kernel_height;
 
     int input_width, input_height;
@@ -38,7 +23,6 @@ public class Pooling2D extends Layer{
 
         output_height = input_height / kernel_height;
         if(input_height % kernel_height > 0) output_height++;
-
 
     }
 

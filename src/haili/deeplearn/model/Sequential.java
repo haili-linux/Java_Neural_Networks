@@ -27,7 +27,7 @@ public class Sequential {
         }
     }
 
-    public float[] out(float[] inputs){
+    public float[] forward(float[] inputs){
         float[] out = layers.get(0).forward(inputs);
         for(int i = 1; i < layers.size(); i++){
             out = layers.get(i).forward(out);
@@ -40,7 +40,7 @@ public class Sequential {
      * @param inputs inputs
      * @return 网络每层的的输出
      */
-    private ArrayList<float[]> out_list(float[] inputs){
+    private ArrayList<float[]> forward_list(float[] inputs){
         ArrayList<float[]> output = new ArrayList<>();
         output.add( layers.get(0).forward(inputs) );
 
@@ -50,8 +50,8 @@ public class Sequential {
         return output;
     }
 
-    public void back(float[] x, float[] y){
-        ArrayList<float[]> output = out_list(x);
+    public void backward(float[] x, float[] y){
+        ArrayList<float[]> output = forward_list(x);
 
         float[] delta = new float[y.length];
         float[] lastOut = output.get(output.size()-1);
@@ -69,7 +69,7 @@ public class Sequential {
     public float loss(float[][] x, float[][] y){
         float loss = 0;
         for (int i = 0; i < x.length; i++){
-            float[] oi = out(x[i]);
+            float[] oi = forward(x[i]);
             for (int j = 0; j < oi.length; j ++){
                 loss += new MSELoss().f(oi[j], y[i][j]);
             }
