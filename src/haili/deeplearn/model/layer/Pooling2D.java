@@ -7,16 +7,26 @@ public class Pooling2D extends Layer{
     
     int kernel_width, kernel_height;
 
-    int input_width, input_height;
-    int output_width, output_height;
-
 
     //padding = 0;
     public Pooling2D(int input_width, int input_height, int kernel_width, int kernel_height){
-        this.input_width = input_width;
-        this.input_height = input_height;
+
         this.kernel_width = kernel_width;
         this.kernel_height = kernel_height;
+
+       init(input_width, input_height, 0);
+
+    }
+
+    public Pooling2D(int kernel_width, int kernel_height){
+        this.kernel_width = kernel_width;
+        this.kernel_height = kernel_height;
+    }
+
+    @Override
+    public void init(int input_width, int input_height, int input_Dimension){
+        this.input_width = input_width;
+        this.input_height = input_height;
 
         output_width = input_width /kernel_width;
         if(input_width % kernel_width > 0) output_width++;
@@ -24,11 +34,14 @@ public class Pooling2D extends Layer{
         output_height = input_height / kernel_height;
         if(input_height % kernel_height > 0) output_height++;
 
+        output_dimension = output_height * output_width;
+        input_dimension = input_width * input_height;
     }
+
 
     @Override
     public float[] forward(float[] inputs) {
-        float[] out = new float[output_width * output_height];
+        float[] out = new float[output_dimension];
 
         for (int ih = 0; ih < input_height; ih += kernel_height)
             for (int iw = 0; iw < input_width; iw += kernel_width) {
@@ -55,7 +68,7 @@ public class Pooling2D extends Layer{
 
     @Override
     public float[] backward(float[] inputs, float[] output, float[] deltas) {
-        float[] last_layer_deltas = new float[input_width * input_height];
+        float[] last_layer_deltas = new float[output_dimension];
 
         for (int ih = 0; ih < output_height; ih ++)
             for (int iw = 0; iw < output_width; iw ++) {
@@ -68,5 +81,20 @@ public class Pooling2D extends Layer{
 
             }
         return last_layer_deltas;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Pooling2D{" +
+                "input_dimension=" + input_dimension +
+                ", input_width=" + input_width +
+                ", input_height=" + input_height +
+                ", output_dimension=" + output_dimension +
+                ", output_width=" + output_width +
+                ", output_height=" + output_height +
+                ", kernel_width=" + kernel_width +
+                ", kernel_height=" + kernel_height +
+                '}';
     }
 }

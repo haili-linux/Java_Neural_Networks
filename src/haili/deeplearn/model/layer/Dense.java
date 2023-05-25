@@ -4,28 +4,38 @@ import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Fuction;
 
 public class Dense extends Layer{
-    public final int input_Dimension;
-    public final int output_Dimension;
+
 
     public Neuron[] neurons;
 
-    public Dense(int input_Dimension, int output_Dimension, Fuction activation){
-        this.input_Dimension = input_Dimension;
-        this.output_Dimension = output_Dimension;
+    public Fuction activation;
 
+    public Dense(int input_Dimension, int output_Dimension, Fuction activation){
+        this.activation = activation;
+        this.output_dimension = output_Dimension;
+        init(-1, -1, input_Dimension);
+    }
+
+    public Dense(int output_Dimension, Fuction activation){
+        this.output_dimension = output_Dimension;
+        this.activation = activation;
         neurons = new Neuron[output_Dimension];
-        //w = new float[output_Dimension][];
-        //bias = new float[output_Dimension];
-        for (int i = 0; i < neurons.length; i++) {
-            neurons[i] = new Neuron(input_Dimension, activation);
-            //w[i] = neurons[i].w;
-            //bias[i] = neurons[i].b;
-        }
     }
 
     @Override
+    public void init(int input_width, int input_height, int input_dimension){
+        this.input_dimension = input_dimension;
+        neurons = new Neuron[output_dimension];
+
+        for (int i = 0; i < neurons.length; i++)
+            neurons[i] = new Neuron(input_dimension, activation);
+    }
+
+
+    @Override
     public float[] forward(float[] inputs) {
-        float[] output = new float[output_Dimension];
+
+        float[] output = new float[output_dimension];
         for (int i = 0; i < output.length; i++)
             output[i] = neurons[i].out_notSave(inputs);
 
@@ -43,9 +53,9 @@ public class Dense extends Layer{
     @Override
     public float[] backward(float[] inputs, float[] output, float[] deltas) {
 
-        float[] last_layer_deltas = new float[input_Dimension];
+        float[] last_layer_deltas = new float[input_dimension];
 
-        float[][] deltas_this_w = new float[output_Dimension][input_Dimension];
+        float[][] deltas_this_w = new float[output_dimension][input_dimension];
         for(int i = 0; i < neurons.length; i++){
 
             deltas[i] *= neurons[i].ACT_function.f_derivative(output[i]);
@@ -61,5 +71,18 @@ public class Dense extends Layer{
         }
 
         return last_layer_deltas;
+    }
+
+    @Override
+    public String toString() {
+        return "Dense{" +
+                "activation=" + activation +
+                ", input_dimension=" + input_dimension +
+                ", input_width=" + input_width +
+                ", input_height=" + input_height +
+                ", output_dimension=" + output_dimension +
+                ", output_width=" + output_width +
+                ", output_height=" + output_height +
+                '}';
     }
 }
