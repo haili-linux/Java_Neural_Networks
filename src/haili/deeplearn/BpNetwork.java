@@ -1,16 +1,16 @@
 package haili.deeplearn;
 
 import haili.deeplearn.function.*;
+import haili.deeplearn.utils.SaveData;
 import haili.deeplearn.utils.ThreadWork;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.function.Sigmoid;
 import haili.deeplearn.utils.ProgressBarCmd;
 
 import java.io.*;
 import java.util.*;
 
-public class BpNetwork implements Cloneable,Serializable
+public class BpNetwork extends SaveData implements Cloneable,Serializable
 {
 	public int input_n;//输入维度
 	public int output_n;//输出维度
@@ -306,7 +306,7 @@ public class BpNetwork implements Cloneable,Serializable
 		}
 	}
 	public void addOutput_n(int add_number){
-		addOutput_n(add_number,getFuctionById(act_fuctiom_ID));
+		addOutput_n(add_number, Fuction.getFunctionById(act_fuctiom_ID));
 	}
 
 	//减少输出维度, n:要减的维度数,默认加在最后
@@ -345,7 +345,7 @@ public class BpNetwork implements Cloneable,Serializable
 		}
 	}
 	public void addNeuerInHidden(int n,int add_number){
-		addNeuerInHidden(n,add_number,getFuctionById(act_fuctiom_ID));
+		addNeuerInHidden(n,add_number, Fuction.getFunctionById(act_fuctiom_ID));
 	}
 
 	//在第n隐藏层上减少神经元
@@ -411,7 +411,7 @@ public class BpNetwork implements Cloneable,Serializable
 		}
 	}
 	public void addHiddenNeuer(int n,int k){
-		addHiddenNeuer(n,k,getFuctionById(act_fuctiom_ID));
+		addHiddenNeuer(n, k, Fuction.getFunctionById(act_fuctiom_ID));
 	}
 
 	//删除第n层神经元
@@ -472,33 +472,33 @@ public class BpNetwork implements Cloneable,Serializable
 			PrintWriter pw = new PrintWriter(fw);
 
 			pw.println("explain:" + EXPLAIN);
-			pw.println(SInt("in_vector", input_n));
-			pw.println(SInt("out_vector", output_n));
-			pw.println(Sfloat("nl", lr));
+			pw.println(sInt("in_vector", input_n));
+			pw.println(sInt("out_vector", output_n));
+			pw.println(sFloat("nl", lr));
 			pw.println(sIntArrays("hid_n", hid_n));
-			pw.println(Sfloat("de", dError));
-			pw.println(Sfloat("_in_max", _in_max));
-			pw.println(Sfloat("_out_max", _out_max));
-			pw.println(SInt("ACT_FUCTION",act_fuctiom_ID));
-			pw.println(SInt("LOSS_FUCTION", Loss_function.id));
+			pw.println(sFloat("de", dError));
+			pw.println(sFloat("_in_max", _in_max));
+			pw.println(sFloat("_out_max", _out_max));
+			pw.println(sInt("ACT_FUCTION",act_fuctiom_ID));
+			pw.println(sInt("LOSS_FUCTION", Loss_function.id));
 
 
 			//输出层
 			for (int i = 0; i < output_n; i++) {
 				String name = "outputNeuer[" + i + "].";
-				pw.println(SInt(name + "act_fuction_id", output_Neuron[i].ACT_function.id));
-				pw.println(Sfloat(name + "d", output_Neuron[i].b));
+				pw.println(sInt(name + "act_fuction_id", output_Neuron[i].ACT_function.id));
+				pw.println(sFloat(name + "d", output_Neuron[i].b));
 				for (int j = 0; j < output_Neuron[i].w.length; j++)
-					pw.println(Sfloat(name + "w" + j, output_Neuron[i].w[j]));
+					pw.println(sFloat(name + "w" + j, output_Neuron[i].w[j]));
 			}
 			//隐藏层
 			for (int n = 0; n < hidden_Neuron.length; n++)//第n层
 				for (int i = 0; i < hidden_Neuron[n].length; i++) {//第i个
 					String name = "hiddenNeuer[" + n + "][" + i + "].";
-					pw.println(SInt(name + "act_fuction_id", hidden_Neuron[n][i].ACT_function.id));
-					pw.println(Sfloat(name + "d", hidden_Neuron[n][i].b));
+					pw.println(sInt(name + "act_fuction_id", hidden_Neuron[n][i].ACT_function.id));
+					pw.println(sFloat(name + "d", hidden_Neuron[n][i].b));
 					for (int j = 0; j < hidden_Neuron[n][i].w.length; j++)
-						pw.println(Sfloat(name + "w" + j, hidden_Neuron[n][i].w[j]));
+						pw.println(sFloat(name + "w" + j, hidden_Neuron[n][i].w[j]));
 				}
 
 			pw.flush();
@@ -1375,68 +1375,6 @@ public class BpNetwork implements Cloneable,Serializable
 		return a3;
 	}
 
-	//sava
-	private String SInt(String name,int vlue){
-	    return name+":"+vlue;
-	}
-	private int getSInt(String infor){
-	    return Integer.parseInt( infor.substring(infor.indexOf(":")+1));
-	}
-	private String Sfloat(String name,float vlue){
-	    return name+":"+vlue;
-	}
-	private float getSfloat(String infor){
-	    return Float.parseFloat(infor.substring(infor.indexOf(":")+1));
-	}
-	private String sIntArrays(String name, int[] data){
-		return name + ":length:" + data.length + " " + Arrays.toString(data);
-	}
-	private String sDoubleArrays(String name,float[] data){
-		return name + ":length:" + data.length + " " + Arrays.toString(data);
-	}
-	
-	private int[] getsIntArrays(String s){
-		int length = Integer.parseInt( s.substring(s.lastIndexOf(":")+1,s.indexOf("[")-1));
-		int[] sd=new int[length];
-		int n=0;
-		char d = ',';
-		for(int i=0;i<s.length();i++){
-			if(s.charAt(i)=='[' || s.charAt(i)==','){
-				i++;
-				StringBuilder data= new StringBuilder();
-				while(s.charAt(i)!=d && s.charAt(i)!=']'){
-					data.append(s.charAt(i));
-					i++;
-				}
-				sd[n] =(int) Double.parseDouble(data.toString());
-				n++;
-				i--;
-			}
-		}
-		return sd;
-	}
-	
-	private float[] getsFloatArrays(String s){
-		int length = Integer.parseInt( s.substring(s.lastIndexOf(":")+1,s.indexOf("[")-1));
-		float[] sd=new float[length];
-		int n=0;
-		char d = ',';
-		for(int i=0;i<s.length();i++){
-			if(s.charAt(i)=='[' || s.charAt(i)==','){
-			  i++;
-			  StringBuilder data= new StringBuilder();
-			  while(s.charAt(i)!=d && s.charAt(i)!=']'){
-				  data.append(s.charAt(i));
-				  i++;
-			  }
-			  //System.out.println(data);
-			  sd[n] = Float.parseFloat(data.toString());
-			  n++;
-			  i--;
-			}
-		}
-		return sd;
-	}
 
 
 	//从文件加载神经网络
@@ -1454,19 +1392,19 @@ public class BpNetwork implements Cloneable,Serializable
 				line = in.readLine();
 				output_n = getSInt(line);
 				line = in.readLine();
-				lr = getSfloat(line);
+				lr = getSFloat(line);
 				line = in.readLine();
 				hid_n = getsIntArrays(line);
 				line = in.readLine();
-				dError = getSfloat(line);
+				dError = getSFloat(line);
 				line = in.readLine();
-				_in_max = getSfloat(line);
+				_in_max = getSFloat(line);
 				line = in.readLine();
-				_out_max = getSfloat(line);
+				_out_max = getSFloat(line);
 				line = in.readLine();
 				act_fuctiom_ID = getSInt(line);
 				line = in.readLine();
-				Loss_function = getFuctionById(getSInt(line));
+				Loss_function = Fuction.getFunctionById(getSInt(line));
 
 
 				outNeuer_out = new float[output_n];
@@ -1479,13 +1417,13 @@ public class BpNetwork implements Cloneable,Serializable
 				output_Neuron = new Neuron[output_n];
 				for(int i=0;i<output_n;i++) {
 					line = in.readLine();
-					Fuction actf = getFuctionById(getSInt(line));
+					Fuction actf = Fuction.getFunctionById(getSInt(line));
 					line = in.readLine();
-					float d = getSfloat(line);
+					float d = getSFloat(line);
 					float[] w = new float[hid_n[hid_n.length-1]];
 					for(int j=0;j<w.length;j++){
 						line = in.readLine();
-						w[j] = getSfloat(line);
+						w[j] = getSFloat(line);
 					}
 
 					Neuron neuer = new Neuron(w.length);
@@ -1501,13 +1439,13 @@ public class BpNetwork implements Cloneable,Serializable
 				//第0层隐藏层
 				for(int i = 0; i< hidden_Neuron[0].length; i++){
 					line = in.readLine();
-					Fuction actf = getFuctionById(getSInt(line));
+					Fuction actf = Fuction.getFunctionById(getSInt(line));
 					line = in.readLine();
-					float d = getSfloat(line);
+					float d = getSFloat(line);
 					float[] w = new float[input_n];
 					for(int j=0;j<w.length;j++){
 						line = in.readLine();
-						w[j] = getSfloat(line);
+						w[j] = getSFloat(line);
 					}
 					Neuron neuer = new Neuron(w.length);
 					neuer.w = w;
@@ -1519,13 +1457,13 @@ public class BpNetwork implements Cloneable,Serializable
 				for(int n = 1; n< hidden_Neuron.length; n++)//第n层
 					for(int i = 0; i< hidden_Neuron[n].length; i++){
 						line = in.readLine();
-						Fuction actf = getFuctionById(getSInt(line));
+						Fuction actf = Fuction.getFunctionById(getSInt(line));
 						line = in.readLine();
-						float d = getSfloat(line);
+						float d = getSFloat(line);
 						float[] w = new float[hid_n[n-1]];
 						for(int j=0;j<w.length;j++){
 							line = in.readLine();
-							w[j] = getSfloat(line);
+							w[j] = getSFloat(line);
 						}
 						Neuron neuer = new Neuron(w.length);
 						neuer.w = w;
@@ -1540,21 +1478,7 @@ public class BpNetwork implements Cloneable,Serializable
     }
 
 
-	private Fuction getFuctionById(int id){
-		Fuction r;
-		switch (id){
-			case 1: r = new Sigmoid(); break;
-			case 2: r = new Tanh();    break;
-			case 3: r = new Relu();    break;
-			case 4: r = new LRelu();   break;
 
-			case 10:r = new MSELoss(); break;
-			case 11:r = new CELoss();  break;
-			case 12:r = new CESLoss(); break;
-			default:r = new Fuction(); break;
-		}
-		return r;
-	}
 
 	//获取神经网络的参数数量
 	public int getWandD_number(){

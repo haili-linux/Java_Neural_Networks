@@ -2,8 +2,9 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Fuction;
-import haili.deeplearn.function.LRelu;
 
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 public class Conv2D extends Layer{
@@ -14,11 +15,13 @@ public class Conv2D extends Layer{
     public float[] w;
     float bias = 0;
 
-    private final int[] index_start;
+    public int[] startConvIndex;
 
     Fuction Act_Function;
 
     public Conv2D(int input_width, int input_height, int kernel_width, int kernel_height, int step, Fuction activation){
+        id = 2;
+
         this.kernel_width = kernel_width;
         this.kernel_height = kernel_height;
         this.step = step;
@@ -26,16 +29,13 @@ public class Conv2D extends Layer{
         this.Act_Function = activation;
         w = new Neuron(kernel_width * kernel_height).w;
 
-        index_start =  new int[w.length];
-        for(int i = 0; i < index_start.length; i++){
-            int ih = i / kernel_width;
-            int iw = i % kernel_width;
-            index_start[i] = ih * input_width + iw;
-        }
+        initStartConvIndex();
         init(input_width, input_height, input_height*input_width);
     }
 
     public Conv2D(int kernel_width, int kernel_height, int step, Fuction activation) {
+        id = 2;
+
         this.kernel_width = kernel_width;
         this.kernel_height = kernel_height;
         this.step = step;
@@ -43,11 +43,15 @@ public class Conv2D extends Layer{
         this.Act_Function = activation;
         w = new Neuron(kernel_width * kernel_height).w;
 
-        index_start =  new int[w.length];
-        for(int i = 0; i < index_start.length; i++){
+        initStartConvIndex();
+    }
+
+    private void initStartConvIndex(){
+        startConvIndex =  new int[w.length];
+        for(int i = 0; i < startConvIndex.length; i++){
             int ih = i / kernel_width;
             int iw = i % kernel_width;
-            index_start[i] = ih * input_width + iw;
+            startConvIndex[i] = ih * input_width + iw;
         }
     }
 
@@ -61,6 +65,8 @@ public class Conv2D extends Layer{
         output_height = (input_height - kernel_height) / step + 1;
         input_dimension = input_Dimension;
         output_dimension = output_width * output_height;
+
+        initStartConvIndex();
     }
 
     /**
@@ -71,7 +77,7 @@ public class Conv2D extends Layer{
     @Override
     public float[] forward(float[] inputs) {
         float[] outputs = new float[output_dimension];
-        int[] k_index = index_start.clone();
+        int[] k_index = startConvIndex.clone();
 
         for(int ih = 0; ih < output_height; ih++){
             for(int iw = 0; iw < output_width; iw++) {
@@ -97,7 +103,7 @@ public class Conv2D extends Layer{
         float[] w_delta = new float[w.length];
         float b_delta = 0;
 
-        int[] k_index = index_start.clone();
+        int[] k_index = startConvIndex.clone();
 
         for(int ih = 0; ih < output_height; ih++){
             for(int iw = 0; iw < output_width; iw++) {
@@ -131,6 +137,49 @@ public class Conv2D extends Layer{
         return last_layer_deltas;
     }
 
+
+    @Override
+    public void saveInFile(PrintWriter pw) throws Exception {
+        pw.println(sInt("Layer_ID", id));
+        pw.println(sInt("input_dimension", input_dimension));
+        pw.println(sInt("input_width", input_width));
+        pw.println(sInt("input_height", input_height));
+
+        pw.println(sInt("output_dimension", output_dimension));
+        pw.println(sInt("output_width", output_width));
+        pw.println(sInt("output_height", output_height));
+
+        pw.println(sInt("kernel_width", kernel_width));
+        pw.println(sInt("kernel_height", kernel_height));
+        pw.println(sInt("step", step));
+
+        pw.println(sInt("Act_Function_ID", Act_Function.id));
+        pw.println(sFloat("bias", bias));
+        pw.println(sFloatArrays("w", w));
+    }
+
+    @Override
+    public void InitByFile(BufferedReader in) throws Exception {
+        input_dimension = getSInt(in.readLine());
+        input_width = getSInt(in.readLine());
+        input_height = getSInt(in.readLine());
+
+        output_dimension = getSInt(in.readLine());
+        output_width = getSInt(in.readLine());
+        output_height = getSInt(in.readLine());
+
+        kernel_width = getSInt(in.readLine());
+        kernel_height = getSInt(in.readLine());
+        step = getSInt(in.readLine());
+
+        Act_Function = Fuction.getFunctionById( getSInt(in.readLine()) );
+        bias = getSFloat(in.readLine());
+        w = getsFloatArrays(in.readLine());
+
+        initStartConvIndex();
+    }
+
+
     @Override
     public String toString() {
         return "Conv2D{" +
@@ -144,6 +193,8 @@ public class Conv2D extends Layer{
                 ", output_dimension=" + output_dimension +
                 ", output_width=" + output_width +
                 ", output_height=" + output_height +
+                ", w=" + Arrays.toString(w) +
+                ", bias=" + bias +
                 '}';
     }
 }

@@ -1,15 +1,17 @@
 package haili.deeplearn.model.layer;
 
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 public class Pooling2D extends Layer{
 
-    
     int kernel_width, kernel_height;
 
 
     //padding = 0;
     public Pooling2D(int input_width, int input_height, int kernel_width, int kernel_height){
+        id = 3;
 
         this.kernel_width = kernel_width;
         this.kernel_height = kernel_height;
@@ -19,6 +21,8 @@ public class Pooling2D extends Layer{
     }
 
     public Pooling2D(int kernel_width, int kernel_height){
+        id = 3;
+
         this.kernel_width = kernel_width;
         this.kernel_height = kernel_height;
     }
@@ -68,7 +72,7 @@ public class Pooling2D extends Layer{
 
     @Override
     public float[] backward(float[] inputs, float[] output, float[] deltas) {
-        float[] last_layer_deltas = new float[output_dimension];
+        float[] last_layer_deltas = new float[input_dimension];
 
         for (int ih = 0; ih < output_height; ih ++)
             for (int iw = 0; iw < output_width; iw ++) {
@@ -81,6 +85,37 @@ public class Pooling2D extends Layer{
 
             }
         return last_layer_deltas;
+    }
+
+
+    @Override
+    public void saveInFile(PrintWriter pw) throws Exception {
+        pw.println(sInt("Layer_ID", id));
+
+        pw.println(sInt("input_dimension", input_dimension));
+        pw.println(sInt("input_width", input_width));
+        pw.println(sInt("input_height", input_height));
+
+        pw.println(sInt("output_dimension", output_dimension));
+        pw.println(sInt("output_width", output_width));
+        pw.println(sInt("output_height", output_height));
+
+        pw.println(sInt("kernel_width", kernel_width));
+        pw.println(sInt("kernel_height", kernel_height));
+    }
+
+    @Override
+    public void InitByFile(BufferedReader in) throws Exception {
+        input_dimension = getSInt(in.readLine());
+        input_width = getSInt(in.readLine());
+        input_height = getSInt(in.readLine());
+
+        output_dimension = getSInt(in.readLine());
+        output_width = getSInt(in.readLine());
+        output_height = getSInt(in.readLine());
+
+        kernel_width = getSInt(in.readLine());
+        kernel_height = getSInt(in.readLine());
     }
 
 

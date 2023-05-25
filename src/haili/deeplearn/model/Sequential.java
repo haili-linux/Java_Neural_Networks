@@ -2,20 +2,31 @@ package haili.deeplearn.model;
 
 import haili.deeplearn.function.Fuction;
 import haili.deeplearn.function.MSELoss;
+import haili.deeplearn.model.layer.Conv2D;
+import haili.deeplearn.model.layer.Dense;
 import haili.deeplearn.model.layer.Layer;
+import haili.deeplearn.model.layer.Pooling2D;
+import haili.deeplearn.utils.SaveData;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Sequential {
+public class Sequential extends SaveData {
+
+    public String EXPLAIN = "";
+
 
     int input_width, input_height;
     int input_Dimension;
 
     public Fuction Loss_Function = new MSELoss();
+
+    public float loss = 0;
+
     public float learn_rate = 1e-4f;
 
-    ArrayList<Layer> layers = new ArrayList<>();
+    public ArrayList<Layer> layers = new ArrayList<>();
 
 
 
@@ -25,6 +36,13 @@ public class Sequential {
         this.input_Dimension = input_Dimension;
     }
 
+    public Sequential(String fileName){
+        try {
+            InitByFile(fileName);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+    }
 
     public void addLayer(Layer layer){
         layer.learn_rate = learn_rate;
@@ -41,16 +59,18 @@ public class Sequential {
         layers.add(layer);
     }
 
+
     public void setLoss_Function(Fuction loss_Function){
         this.Loss_Function = loss_Function;
     }
-
     public void setLearn_rate(float learn_rate){
         this.learn_rate = learn_rate;
         for (Layer layer: layers){
             layer.learn_rate = learn_rate;
         }
     }
+
+
 
     public float[] forward(float[] inputs){
         float[] out = layers.get(0).forward(inputs);
@@ -88,6 +108,7 @@ public class Sequential {
     }
 
 
+
     //计算loss梯度
     private float[] lossDelta(float[] out, float[] y_train){
 
@@ -99,7 +120,6 @@ public class Sequential {
         return delta;
     }
 
-
     public float loss(float[][] x, float[][] y){
         float loss = 0;
         for (int i = 0; i < x.length; i++){
@@ -108,6 +128,105 @@ public class Sequential {
                 loss += new MSELoss().f(oi[j], y[i][j]);
             }
         }
-        return loss / x.length;
+        return this.loss = loss / x.length;
+    }
+
+
+    public void saveInFile(String fileName) throws Exception{
+        File file = new File(fileName);
+        if (file.exists()) {
+            String p1 = fileName.substring(0, fileName.lastIndexOf("."));
+            for (int i = 0; ; i++) {
+                file = new File(fileName = p1 + "_" + i + ".log");
+                if (!file.exists()) break;
+            }
+        }
+        try { boolean newFile = file.createNewFile(); } catch (Exception ignored) { }
+
+        if(file.isFile()) {
+            FileWriter fw = null;
+            try { fw = new FileWriter(file, true); } catch (IOException e) { e.printStackTrace(); return; }
+
+            PrintWriter pw = new PrintWriter(fw);
+
+            pw.println("explain: Sequential:" + EXPLAIN);
+
+            pw.println(sInt("input_Dimension", input_Dimension));
+            pw.println(sInt("input_width", input_width));
+            pw.println(sInt("input_height", input_height));
+
+            pw.println(sFloat("loss", loss));
+            pw.println(sFloat("learn_rate", learn_rate));
+            pw.println(sInt("LossFunction", Loss_Function.id));
+
+            for (Layer layer : layers)
+                layer.saveInFile(pw);
+
+            pw.flush();
+            try {
+                fw.flush();
+                pw.close();
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    private void InitByFile(String fileName) throws Exception{
+        File file = new File(fileName);
+        if(file.isFile())
+            try {
+                FileReader fileReader = null;
+                fileReader = new FileReader(file);
+                BufferedReader in = new BufferedReader(fileReader);
+
+                String line = in.readLine();
+                EXPLAIN = line.substring(20);
+
+                input_Dimension = getSInt(in.readLine());
+                input_width = getSInt(in.readLine());
+                input_height = getSInt(in.readLine());
+
+                loss = getSFloat(in.readLine());
+                learn_rate = getSFloat(in.readLine());
+                Loss_Function = Fuction.getFunctionById(getSInt(in.readLine()));
+
+                while ((line=in.readLine()) != null){
+                    Layer layer = getLayerById(getSInt(line));
+                    layer.InitByFile(in);
+                    layers.add(layer);
+                }
+
+                in.close();
+                fileReader.close();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+    }
+
+    private Layer getLayerById(int id){
+        Layer layer;
+        switch (id){
+            case 1: layer = new Dense(1, new Fuction()); break;
+            case 2: layer = new Conv2D(1,1,1,new Fuction()); break;
+            case 3: layer = new Pooling2D(1,1); break;
+            default: layer = new Layer(); break;
+        }
+        return layer;
+    }
+
+    @Override
+    public String toString() {
+        return "Sequential{" +
+                "input_width=" + input_width +
+                ", input_height=" + input_height +
+                ", input_Dimension=" + input_Dimension +
+                ", Loss_Function=" + Loss_Function +
+                ", learn_rate=" + learn_rate +
+                ", layers=" + layers +
+                '}';
     }
 }
