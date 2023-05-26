@@ -1,8 +1,9 @@
 package haili.deeplearn.model.layer;
 
+import haili.deeplearn.utils.SaveData;
+
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.Arrays;
 
 public class Pooling2D extends Layer{
 
@@ -71,7 +72,7 @@ public class Pooling2D extends Layer{
     }
 
     @Override
-    public float[] backward(float[] inputs, float[] output, float[] deltas) {
+    public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         float[] last_layer_deltas = new float[input_dimension];
 
         for (int ih = 0; ih < output_height; ih ++)
@@ -84,38 +85,39 @@ public class Pooling2D extends Layer{
                     }
 
             }
-        return last_layer_deltas;
+        return new float[][]{ last_layer_deltas, null } ;
     }
+
 
 
     @Override
     public void saveInFile(PrintWriter pw) throws Exception {
-        pw.println(sInt("Layer_ID", id));
+        pw.println(SaveData.sInt("Layer_ID", id));
 
-        pw.println(sInt("input_dimension", input_dimension));
-        pw.println(sInt("input_width", input_width));
-        pw.println(sInt("input_height", input_height));
+        pw.println(SaveData.sInt("input_dimension", input_dimension));
+        pw.println(SaveData.sInt("input_width", input_width));
+        pw.println(SaveData.sInt("input_height", input_height));
 
-        pw.println(sInt("output_dimension", output_dimension));
-        pw.println(sInt("output_width", output_width));
-        pw.println(sInt("output_height", output_height));
+        pw.println(SaveData.sInt("output_dimension", output_dimension));
+        pw.println(SaveData.sInt("output_width", output_width));
+        pw.println(SaveData.sInt("output_height", output_height));
 
-        pw.println(sInt("kernel_width", kernel_width));
-        pw.println(sInt("kernel_height", kernel_height));
+        pw.println(SaveData.sInt("kernel_width", kernel_width));
+        pw.println(SaveData.sInt("kernel_height", kernel_height));
     }
 
     @Override
-    public void InitByFile(BufferedReader in) throws Exception {
-        input_dimension = getSInt(in.readLine());
-        input_width = getSInt(in.readLine());
-        input_height = getSInt(in.readLine());
+    public void initByFile(BufferedReader in) throws Exception {
+        input_dimension = SaveData.getSInt(in.readLine());
+        input_width = SaveData.getSInt(in.readLine());
+        input_height = SaveData.getSInt(in.readLine());
 
-        output_dimension = getSInt(in.readLine());
-        output_width = getSInt(in.readLine());
-        output_height = getSInt(in.readLine());
+        output_dimension = SaveData.getSInt(in.readLine());
+        output_width = SaveData.getSInt(in.readLine());
+        output_height = SaveData.getSInt(in.readLine());
 
-        kernel_width = getSInt(in.readLine());
-        kernel_height = getSInt(in.readLine());
+        kernel_width = SaveData.getSInt(in.readLine());
+        kernel_height = SaveData.getSInt(in.readLine());
     }
 
 

@@ -1,6 +1,7 @@
 package haili.deeplearn;
 
 import haili.deeplearn.function.*;
+import haili.deeplearn.utils.DataSetUtils;
 import haili.deeplearn.utils.SaveData;
 import haili.deeplearn.utils.ThreadWork;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
@@ -112,7 +113,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 			}
 		} else {//mini-batch
 
-			ArrayList<float[][]>[] data = splitBatch(train_X, train_Y, batch_size);
+			ArrayList<float[][]>[] data = DataSetUtils.splitBatch(train_X, train_Y, batch_size);
 			ArrayList<float[][]> train_x = data[0];
 			ArrayList<float[][]> train_y = data[1];
 
@@ -164,7 +165,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 		}
 		else//mini-batch
 		{
-			ArrayList<float[][]>[] data = splitBatch(train_X, train_Y, batch_size);
+			ArrayList<float[][]>[] data = DataSetUtils.splitBatch(train_X, train_Y, batch_size);
 			ArrayList<float[][]> train_x = data[0];
 			ArrayList<float[][]> train_y = data[1];
 
@@ -612,7 +613,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 	}
 
 
-
+/*
 	private class TrainData {
 		public float[] train_x;
 		public float[] train_y;
@@ -629,7 +630,9 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 					'}';
 		}
 	}
-	private ArrayList<float[][]>[]  splitBatch(float[][] in, float[][] t, int batch_size){
+
+
+	public  ArrayList<float[][]>[]  splitBatch(float[][] in, float[][] t, int batch_size){
 		TrainData[] trainDatas = new TrainData[in.length];
 		for (int i = 0; i < trainDatas.length; i++)
 			trainDatas[i] = new TrainData(in[i], t[i]);
@@ -688,6 +691,8 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 		data[1] = train_y;
 		return data;
 	}
+
+ */
 
 
 	/*

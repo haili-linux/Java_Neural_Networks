@@ -2,9 +2,9 @@ package haili.deeplearn.DeltaOptimizer;
 
 public class Adam implements BaseOptimizerInterface {
 
-    final float v1;
-    final float v2;
-    final float e;
+    float v1 = -1;
+    float v2 = -1;
+    float e = -1;
     float dv1;
     float dv2;
     float v1_t;
@@ -12,41 +12,56 @@ public class Adam implements BaseOptimizerInterface {
     float[] m;
     float[] v;
     int len;
-    private int p;
+    //private int p;
 
     public Adam(int delta_number, float v1, float v2, float e){
-        m = new float[delta_number];
-        v = new float[delta_number];
-        len = m.length -1;
+
         this.v1 = v1;
         this.v2 = v2;
         this.e = e;
-        dv1 = 1 - v1;
-        dv2 = 1 - v2;
-        v1_t = v1;
-        v2_t = v2;
-        p = 0;
+
+       init(delta_number);
+        //p = 0;
     }
 
+
+    public Adam(float v1, float v2, float e){
+        this.v1 = v1;
+        this.v2 = v2;
+        this.e = e;
+    }
+
+
+    public Adam(){
+        v1 = 0.9f;
+        v2 = 0.999f;
+        e = 1e-8f;
+    }
+
+
+
     @Override
-    public void init() {
+    public void init(int wn) {
+        m = new float[wn];
+        v = new float[wn];
+        len = m.length -1;
+
         v1_t = v1;
         v2_t = v2;
-        p = 0;
-        m = new float[m.length];
-        v = new float[v.length];
+        dv1 = 1 - v1;
+        dv2 = 1 - v2;
     }
 
     @Override
     public synchronized float DELTA(float delta, int index) {
-
+        /*
         if(p == len) {
             p = 0;
             v1_t *= v1;
             v2_t *= v2;
         } else {
             p++;
-        }
+        }*/
 
         m[index] = v1 * m[index] + dv1 * delta;
         v[index] = v2 * v[index] + dv2 * delta * delta;
@@ -57,4 +72,12 @@ public class Adam implements BaseOptimizerInterface {
         return (float)(m_ / ( Math.sqrt(v_) + e ));
     }
 
+
+    @Override
+    public BaseOptimizerInterface getNewObject() {
+        if(v1 != -1 && v2 != -1 && e != -1 )
+            return new Adam(v1, v2, e);
+         else
+            return new Adam();
+    }
 }

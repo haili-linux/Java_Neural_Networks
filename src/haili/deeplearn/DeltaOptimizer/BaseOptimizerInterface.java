@@ -7,7 +7,7 @@ public interface BaseOptimizerInterface {
     /**
      * 重置优化器
      */
-    public void init();
+    public void init(int wn);
 
     /**
      * 梯度优化
@@ -16,4 +16,5 @@ public interface BaseOptimizerInterface {
      */
     public float DELTA(float delta, int index);
 
+    public BaseOptimizerInterface getNewObject();
 }
