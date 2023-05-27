@@ -36,9 +36,7 @@ public class Sequential extends Layer{
         this.input_dimension = input_Dimension;
     }
 
-    public Sequential(){
-        id = 0;
-    }
+    public Sequential(){ id = 0; }
 
     /**
      * 通过模型文件初始化
@@ -55,12 +53,19 @@ public class Sequential extends Layer{
 
 
     public void addLayer(Layer layer){
+
+        if(layer==this){
+            System.out.println(" error!");
+            return;
+        }
+
         layer.learn_rate = learn_rate;
 
         //layer初始化
         if(layer.input_dimension == 0 || layer.input_height == 0 || layer.input_width == 0){
             if(layers.size() == 0){
-                layer.init(input_width, input_height, input_dimension);
+                if(input_width!=0 && input_height!=0 && input_dimension!=0)
+                    layer.init(input_width, input_height, input_dimension);
             } else {
                 Layer lastLayer = layers.get(layers.size()-1);
                 layer.init(lastLayer.output_width, lastLayer.output_height, lastLayer.output_dimension);
