@@ -24,7 +24,7 @@ public class Sequential extends Layer{
 
     public float loss = 0;
 
-    public float learn_rate = 1e-4f;
+    private float learn_rate = 1e-4f;
 
     public ArrayList<Layer> layers = new ArrayList<>();
 
@@ -34,6 +34,10 @@ public class Sequential extends Layer{
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_Dimension;
+    }
+
+    public Sequential(){
+        id = 0;
     }
 
     /**
@@ -64,7 +68,6 @@ public class Sequential extends Layer{
         }
 
         layers.add(layer);
-
         output_dimension = layer.output_dimension;
         output_width = layer.output_width;
         output_height = layer.output_height;
@@ -102,17 +105,14 @@ public class Sequential extends Layer{
         if(Thread_n>core_number) Thread_n = core_number;
 
         if(batch_size == 1) {
-
             for(int i = 0; i < epoch; i++){
-                String title = "  epoch: " + (i + 1) + "  ";
-                ProgressBarCmd progressBarCmd = new ProgressBarCmd(title, train_X.length, 50);
-                System.out.print(progressBarCmd.setProgress(0));
+
+                if(i%100==0) System.out.println( "  epoch: " + (i + 1) + "  " + calculateLoss(train_X, train_Y) );
+
                 for (int j = 0; j < train_X.length; j++){
                     float[][] d = backward(train_X[j], train_Y[j]);
                     upgradeWeight(d);
-                    //System.out.print(progressBarCmd.setProgress(j + 1));
                 }
-
             }
             System.out.println("");
         } else if(batch_size >= train_X.length) {//batch_size和训练集一样，全批量梯度下降
@@ -234,7 +234,6 @@ public class Sequential extends Layer{
     }
 
 
-
     //测试一个数据集上的误差
     public float calculateLoss(float[][] train_X, float[][] train_Y){
 
@@ -343,14 +342,19 @@ public class Sequential extends Layer{
         switch (id){
             case 0: layer = new Sequential(-1, -1, -1); break;
             case 1: layer = new Dense(1, new Fuction()); break;
-            case 2: layer = new Conv2D(1,1,1,new Fuction()); break;
+            case 2: layer = new Conv2D(1,1,1,1, new Fuction()); break;
             case 3: layer = new Pooling2D(1,1); break;
             default: layer = new Layer(); break;
         }
         return layer;
     }
 
-
+    @Override
+    public void init(int input_width, int input_height, int input_Dimension) {
+        if(layers.size()>0){
+            layers.get(0).init(input_width, input_height, input_Dimension);
+        }
+    }
 
     @Override
     public float[] forward(float[] inputs){
@@ -447,6 +451,8 @@ public class Sequential extends Layer{
             layer.initByFile(in);
             layers.add(layer);
         }
+
+        setLearn_rate(learn_rate);
     }
 
     @Override

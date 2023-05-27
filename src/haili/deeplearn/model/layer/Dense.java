@@ -48,7 +48,6 @@ public class Dense extends Layer{
 
     @Override
     public float[] forward(float[] inputs) {
-
         float[] output = new float[output_dimension];
         for (int i = 0; i < output.length; i++)
             output[i] = neurons[i].out_notSave(inputs);
@@ -70,22 +69,20 @@ public class Dense extends Layer{
         float[] w_b_deltas = new float[getWeightNumber()];
         float[] last_layer_deltas = new float[input_dimension];
 
-        //float[][] deltas_this_w = new float[output_dimension][input_dimension];
         int index = 0;
         for(int i = 0; i < neurons.length; i++){
 
             deltas[i] *= neurons[i].ACT_function.f_derivative(output[i]);
             w_b_deltas[index] = deltas[i];
             index++;
-            //neurons[i].b -= learn_rate * deltas[i];
+
 
             for(int j = 0; j < neurons[i].w.length; j++) {
-                last_layer_deltas[i] += deltas[i] * neurons[i].w[j];
+                last_layer_deltas[j] += deltas[i] * neurons[i].w[j];
 
-                //deltas_this_w[i][j] = deltas[i] * inputs[j];
                 w_b_deltas[index] = deltas[i] * inputs[j];
                 index++;
-                //neurons[i].setW(j, neurons[i].w[j] - learn_rate *  deltas_this_w[i][j]);
+
             }
 
         }
