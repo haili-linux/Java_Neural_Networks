@@ -114,7 +114,7 @@ public class Pooling2D extends Layer{
 
                 }
         }
-        return new float[][]{ last_layer_deltas, null } ;
+        return new float[][]{ last_layer_deltas, new float[0] };
     }
 
 

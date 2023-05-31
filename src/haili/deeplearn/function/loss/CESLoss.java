@@ -1,4 +1,6 @@
-package haili.deeplearn.function;
+package haili.deeplearn.function.loss;
+
+import haili.deeplearn.function.Fuction;
 
 public class CESLoss extends Fuction {
     public CESLoss(){

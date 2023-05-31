@@ -1,6 +1,11 @@
 package haili.deeplearn.function;
 
 
+import haili.deeplearn.function.activation.*;
+import haili.deeplearn.function.loss.CELoss;
+import haili.deeplearn.function.loss.CESLoss;
+import haili.deeplearn.function.loss.MSELoss;
+
 public class Fuction
 {
 
@@ -9,9 +14,9 @@ public class Fuction
 	public String SourceCode;
 	public String SourceCode_derivative;
 	public String SourceCode_derivative_Name;
-    public float f(float x){ return 0; }
+    public float f(float x){ return x; }
 	public float f(float x1,float x2){return 0;}
-	public float f_derivative(float x){ return 0; }
+	public float f_derivative(float x){ return 1; }
 	public float f_derivative(float x1, float x2){ return 0; }
 
 	public static Fuction getFunctionById(int id){
@@ -21,6 +26,7 @@ public class Fuction
 			case 2: r = new Tanh();    break;
 			case 3: r = new Relu();    break;
 			case 4: r = new LRelu();   break;
+			case 5: r = new Softmax(); break;
 
 			case 10:r = new MSELoss(); break;
 			case 11:r = new CELoss();  break;

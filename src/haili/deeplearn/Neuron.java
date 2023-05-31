@@ -1,7 +1,7 @@
 package haili.deeplearn;
 
 import haili.deeplearn.function.Fuction;
-import haili.deeplearn.function.Sigmoid;
+import haili.deeplearn.function.activation.Sigmoid;
 
 import java.util.*;
 import java.io.*;

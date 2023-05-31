@@ -1,6 +1,7 @@
 package haili.deeplearn;
 
 import haili.deeplearn.function.*;
+import haili.deeplearn.function.loss.MSELoss;
 import haili.deeplearn.utils.DataSetUtils;
 import haili.deeplearn.utils.SaveData;
 import haili.deeplearn.utils.ThreadWork;

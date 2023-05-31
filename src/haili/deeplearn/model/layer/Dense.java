@@ -2,7 +2,6 @@ package haili.deeplearn.model.layer;
 
 
 
-import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Fuction;
@@ -152,6 +151,7 @@ public class Dense extends Layer{
 
             int actFunctionID = SaveData.getSInt(in.readLine());
             ni.ACT_function = Fuction.getFunctionById(actFunctionID);
+
             ni.b = SaveData.getSFloat(in.readLine());
             ni.w = new float[input_dimension];
             for (int j = 0; j < input_dimension; j++)

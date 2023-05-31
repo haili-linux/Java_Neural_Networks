@@ -2,11 +2,12 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.utils.SaveData;
+import haili.deeplearn.function.Fuction;
+import haili.deeplearn.model.Sequential;
+import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.Arrays;
 
 public class Layer implements LayerInterface{
 
@@ -50,5 +51,18 @@ public class Layer implements LayerInterface{
     }
 
     public void saveInFile(PrintWriter pw) throws Exception{ }
+
+    public static Layer getLayerById(int id){
+        Layer layer;
+        switch (id){
+            case 0: layer = new Sequential(-1, -1, -1); break;
+            case 1: layer = new Dense(1, new Fuction()); break;
+            case 2: layer = new Conv2D(1,1,1,1, new Fuction()); break;
+            case 3: layer = new Pooling2D(1,1); break;
+            case 4: layer = new SoftmaxLayer(1); break;
+            default: layer = new Layer(); break;
+        }
+        return layer;
+    }
 
 }

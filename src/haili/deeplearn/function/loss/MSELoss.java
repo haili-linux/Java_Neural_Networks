@@ -1,4 +1,6 @@
-package haili.deeplearn.function;
+package haili.deeplearn.function.loss;
+
+import haili.deeplearn.function.Fuction;
 
 //回归损伤函数
 public class MSELoss extends Fuction

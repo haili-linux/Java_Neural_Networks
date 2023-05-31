@@ -2,11 +2,11 @@ package haili.deeplearn.model;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.function.Fuction;
-import haili.deeplearn.function.MSELoss;
-import haili.deeplearn.model.layer.Conv2D;
+import haili.deeplearn.function.activation.Softmax;
+import haili.deeplearn.function.loss.MSELoss;
 import haili.deeplearn.model.layer.Dense;
 import haili.deeplearn.model.layer.Layer;
-import haili.deeplearn.model.layer.Pooling2D;
+import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 import haili.deeplearn.utils.DataSetUtils;
 import haili.deeplearn.utils.ProgressBarCmd;
 import haili.deeplearn.utils.SaveData;
@@ -14,6 +14,7 @@ import haili.deeplearn.utils.ThreadWork;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class Sequential extends Layer{
@@ -72,7 +73,15 @@ public class Sequential extends Layer{
             }
         }
 
+
         layers.add(layer);
+
+        //是全连接层
+        if(layer.id == new Dense(1, new Fuction()).id) {
+            if (((Dense) layer).activation.id == new Softmax().id)//激活函数是softmax
+                layers.add(new SoftmaxLayer(layer.output_dimension));
+        }
+
         output_dimension = layer.output_dimension;
         output_width = layer.output_width;
         output_height = layer.output_height;
@@ -342,18 +351,6 @@ public class Sequential extends Layer{
             }
     }
 
-    private Layer getLayerById(int id){
-        Layer layer;
-        switch (id){
-            case 0: layer = new Sequential(-1, -1, -1); break;
-            case 1: layer = new Dense(1, new Fuction()); break;
-            case 2: layer = new Conv2D(1,1,1,1, new Fuction()); break;
-            case 3: layer = new Pooling2D(1,1); break;
-            default: layer = new Layer(); break;
-        }
-        return layer;
-    }
-
     @Override
     public void init(int input_width, int input_height, int input_Dimension) {
         if(layers.size()>0){
@@ -381,6 +378,7 @@ public class Sequential extends Layer{
         back[0] = deltas;
         for(int i = output_list.size()-1; i > 0; i--) {
             back = layers.get(i).backward(output_list.get(i - 1), output_list.get(i), back[0]);
+            if(back[1]==null) System.out.println(Arrays.toString(back[1]) + "   " + layers.get(i));
             System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
             index += back[1].length;
         }

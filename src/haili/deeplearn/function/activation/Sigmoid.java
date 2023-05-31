@@ -1,4 +1,7 @@
-package haili.deeplearn.function;
+package haili.deeplearn.function.activation;
+
+import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.SourceCodeLib;
 
 public class Sigmoid extends Fuction
 {
