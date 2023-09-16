@@ -87,6 +87,7 @@ public class Sequential extends Layer{
         output_height = layer.output_height;
     }
 
+  
     public void setLoss_Function(Fuction loss_Function){
         this.Loss_Function = loss_Function;
     }

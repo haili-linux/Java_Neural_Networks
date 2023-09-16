@@ -1,6 +1,6 @@
 package haili.deeplearn;
 
-import haili.deeplearn.function.Relu;
+import haili.deeplearn.function.activation.Relu;
 
 import java.util.Arrays;
 

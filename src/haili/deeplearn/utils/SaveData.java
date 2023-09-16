@@ -64,8 +64,4 @@ public class SaveData {
         return data;
     }
 
-    public static void main(String[] args) {
-
-
-    }
 }
