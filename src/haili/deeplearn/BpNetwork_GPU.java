@@ -7,7 +7,7 @@ package haili.deeplearn;/*
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 
 import jcuda.Pointer;
 import jcuda.Sizeof;
@@ -64,7 +64,7 @@ public class BpNetwork_GPU
     MyCUdeviceptr[] hidden_delta_device;
 
 
-    Fuction[] Act_function; //每层的激活函数（包扩输出层）
+    Function[] Act_function; //每层的激活函数（包扩输出层）
     CUfunction[] cuAct_function; //每层的激活函数（包扩输出层）
     CUfunction[] cuAct_function_Batch;
     CUfunction[] cuAct_device_function;//每层的激活函数导函数（包扩输出层）
@@ -73,7 +73,7 @@ public class BpNetwork_GPU
     CUfunction  BP_W_delta_cufunction;
     CUfunction  BP_d_delta_cufunction;
 
-    public BpNetwork_GPU(int in_vector, int out_vector, float ng, Fuction act_fuction , int[] hidden_arf) {
+    public BpNetwork_GPU(int in_vector, int out_vector, float ng, Function act_function, int[] hidden_arf) {
 
         JCudaDriver.setExceptionsEnabled(true);
         JNvrtc.setExceptionsEnabled(true);
@@ -95,15 +95,15 @@ public class BpNetwork_GPU
         BP_W_delta_cufunction = compilebySourceCore(SourceCodeLib.BP.W_delta_Code,"W_delta_Code");
         BP_d_delta_cufunction = compilebySourceCore(SourceCodeLib.BP.d_delta_Code,"d_delta_Code");
 
-        Act_function = new Fuction[hidden_arf.length+1];
+        Act_function = new Function[hidden_arf.length+1];
         cuAct_function = new CUfunction[hidden_arf.length+1];
         cuAct_function_Batch = new CUfunction[hidden_arf.length+1];
         cuAct_device_function = new CUfunction[hidden_arf.length+1];
         for(int i=0; i<Act_function.length; i++){
-            Act_function[i] = act_fuction;
-            cuAct_function[i] = compilebySourceCore(act_fuction.SourceCode, act_fuction.name);
-            cuAct_function_Batch[i] = compilebySourceCore(SourceCodeLib.FP.FPSourceCodeBatch[act_fuction.id], SourceCodeLib.FP.FPSourceCodeBatchName[act_fuction.id] );
-            cuAct_device_function[i] = compilebySourceCore(act_fuction.SourceCode_derivative, act_fuction.SourceCode_derivative_Name);
+            Act_function[i] = act_function;
+            cuAct_function[i] = compilebySourceCore(act_function.SourceCode, act_function.name);
+            cuAct_function_Batch[i] = compilebySourceCore(SourceCodeLib.FP.FPSourceCodeBatch[act_function.id], SourceCodeLib.FP.FPSourceCodeBatchName[act_function.id] );
+            cuAct_device_function[i] = compilebySourceCore(act_function.SourceCode_derivative, act_function.SourceCode_derivative_Name);
         }
 
 

@@ -21,7 +21,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 	public int[] hid_n; //隐藏层神经元结构
 
 	public float dError; //误差
-	public Fuction Loss_function;
+	public Function Loss_function;
 
 	//public float[] inNeuer_out;//输入层每个神经元的输出
 	public float[] outNeuer_out;//输出
@@ -38,14 +38,14 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 	public BaseOptimizerInterface deltaOptimizer; //梯度优化器
 
 	//in:输入量维度, outn:输出结果维度, ng:学习效率  hidden_:隐藏层每层神经元数量
-	public BpNetwork(int in_vector, int out_vector, float ng, Fuction act_fuction , int[] hidden_){
+	public BpNetwork(int in_vector, int out_vector, float ng, Function act_function, int[] hidden_){
 		input_n = in_vector;
 		output_n = out_vector;
 		lr = ng;
 		hid_n = hidden_;
-		act_fuctiom_ID = act_fuction.id;
+		act_fuctiom_ID = act_function.id;
 
-		init(act_fuction);
+		init(act_function);
 		//upThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 		deltaOptimizer = new BaseOptimizer();
 	}
@@ -57,12 +57,12 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 		System.out.println("input dimension: " + input_n);
 		System.out.println("output dimension: " + output_n);
 		System.out.println("loss: " + dError);
-		Fuction[] fuctions = new Fuction[hid_n.length + 1];
+		Function[] functions = new Function[hid_n.length + 1];
 		for (int i = 0; i < hid_n.length; i++){
-			fuctions[i] =  hidden_Neuron[i][0].ACT_function;
+			functions[i] =  hidden_Neuron[i][0].ACT_function;
 		}
-		fuctions[hid_n.length] = output_Neuron[0].ACT_function;
-		System.out.println("activation function: " + Arrays.toString(fuctions));
+		functions[hid_n.length] = output_Neuron[0].ACT_function;
+		System.out.println("activation function: " + Arrays.toString(functions));
 		System.out.println("hidden layer: " + Arrays.toString(hid_n));
 		deltaOptimizer = new BaseOptimizer();
 		//upThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -291,7 +291,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 	}*/
 	
 	//扩展输出维度,默认在最后
-	public void addOutput_n(int add_number, Fuction act_fuction){
+	public void addOutput_n(int add_number, Function act_function){
 		if(add_number>0){
 			output_n += add_number;
 			Neuron[] newOutput_Neuron = new Neuron[output_n];
@@ -301,14 +301,14 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 			     newOutput_Neuron[i] = output_Neuron[i];
 			
 			for(i= output_Neuron.length; i<output_n; i++)
-			     newOutput_Neuron[i] = new Neuron(hidden_Neuron[hidden_Neuron.length-1].length,act_fuction);
+			     newOutput_Neuron[i] = new Neuron(hidden_Neuron[hidden_Neuron.length-1].length, act_function);
 			
 			output_Neuron = newOutput_Neuron;
 			outNeuer_out = new float[output_n];	
 		}
 	}
 	public void addOutput_n(int add_number){
-		addOutput_n(add_number, Fuction.getFunctionById(act_fuctiom_ID));
+		addOutput_n(add_number, Function.getFunctionById(act_fuctiom_ID));
 	}
 
 	//减少输出维度, n:要减的维度数,默认加在最后
@@ -322,7 +322,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 
 
 	//在第n隐藏层上增加神经元
-	public void addNeuerInHidden(int n, int add_number, Fuction act_fuction){
+	public void addNeuerInHidden(int n, int add_number, Function act_function){
 		if(n< hidden_Neuron.length && n>=0 && add_number>0){
 			hid_n[n] += add_number;
 			Neuron[] newlist = new Neuron[hid_n[n]];
@@ -332,7 +332,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 				newlist[i] = hidden_Neuron[n][i];
 			
 			for(i= hidden_Neuron[n].length; i<hid_n[n]; i++)
-			    newlist[i] = new Neuron(hidden_Neuron[n][0].w.length,act_fuction);
+			    newlist[i] = new Neuron(hidden_Neuron[n][0].w.length, act_function);
 			
 			//增加
 			hidden_Neuron[n] = newlist;
@@ -347,7 +347,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 		}
 	}
 	public void addNeuerInHidden(int n,int add_number){
-		addNeuerInHidden(n,add_number, Fuction.getFunctionById(act_fuctiom_ID));
+		addNeuerInHidden(n,add_number, Function.getFunctionById(act_fuctiom_ID));
 	}
 
 	//在第n隐藏层上减少神经元
@@ -367,17 +367,17 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 	}
 	
 	//在第n层前插入1层含有k个神经元的隐藏层
-	public void addHiddenNeuer(int n, int k, Fuction act_fuction){
+	public void addHiddenNeuer(int n, int k, Function act_function){
 		if(n>=0 && k>0){
 			Neuron[] newN = new Neuron[k];
 			boolean flag = false;
 			//初始化新加入的层
 			if(n==0){
-				for(int i=0;i<k;i++) newN[i] = new Neuron(input_n,act_fuction);
+				for(int i=0;i<k;i++) newN[i] = new Neuron(input_n, act_function);
 			}else if(flag = n>= hidden_Neuron.length){
-				for(int i=0;i<k;i++) newN[i] = new Neuron(hid_n[hid_n.length-1],act_fuction);
+				for(int i=0;i<k;i++) newN[i] = new Neuron(hid_n[hid_n.length-1], act_function);
 			}else{
-				for(int i=0;i<k;i++) newN[i] = new Neuron(hidden_Neuron[n-1].length,act_fuction);
+				for(int i=0;i<k;i++) newN[i] = new Neuron(hidden_Neuron[n-1].length, act_function);
 			}
 			
 			//插入新层
@@ -413,7 +413,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 		}
 	}
 	public void addHiddenNeuer(int n,int k){
-		addHiddenNeuer(n, k, Fuction.getFunctionById(act_fuctiom_ID));
+		addHiddenNeuer(n, k, Function.getFunctionById(act_fuctiom_ID));
 	}
 
 	//删除第n层神经元
@@ -1313,13 +1313,13 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 
 	
 	//初始化
-	private void init(Fuction act_fuction){
+	private void init(Function act_function){
 		Loss_function = new MSELoss();
 
 		output_Neuron = new Neuron[output_n];
 		outNeuer_out = new float[output_n];
 		for(int i = 0; i< output_Neuron.length; i++)
-			output_Neuron[i] = new Neuron(hid_n[hid_n.length-1],act_fuction);
+			output_Neuron[i] = new Neuron(hid_n[hid_n.length-1], act_function);
 
 		hidden_Neuron = new Neuron[hid_n.length][];
 		hiddenNeuer_out = new float[hid_n.length][];
@@ -1328,10 +1328,10 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 			hiddenNeuer_out[i] = new float[hid_n[i]];
 			if(i==0)
 				for(int j=0;j<n.length;j++) 
-					n[j] = new Neuron(input_n,act_fuction);
+					n[j] = new Neuron(input_n, act_function);
 			else 
 				for(int j=0;j<n.length;j++)
-					n[j] = new Neuron(hid_n[i-1],act_fuction);
+					n[j] = new Neuron(hid_n[i-1], act_function);
 
 			hidden_Neuron[i] = n;
 		}// end for
@@ -1410,7 +1410,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 				line = in.readLine();
 				act_fuctiom_ID = getSInt(line);
 				line = in.readLine();
-				Loss_function = Fuction.getFunctionById(getSInt(line));
+				Loss_function = Function.getFunctionById(getSInt(line));
 
 
 				outNeuer_out = new float[output_n];
@@ -1423,7 +1423,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 				output_Neuron = new Neuron[output_n];
 				for(int i=0;i<output_n;i++) {
 					line = in.readLine();
-					Fuction actf = Fuction.getFunctionById(getSInt(line));
+					Function actf = Function.getFunctionById(getSInt(line));
 					line = in.readLine();
 					float d = getSFloat(line);
 					float[] w = new float[hid_n[hid_n.length-1]];
@@ -1445,7 +1445,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 				//第0层隐藏层
 				for(int i = 0; i< hidden_Neuron[0].length; i++){
 					line = in.readLine();
-					Fuction actf = Fuction.getFunctionById(getSInt(line));
+					Function actf = Function.getFunctionById(getSInt(line));
 					line = in.readLine();
 					float d = getSFloat(line);
 					float[] w = new float[input_n];
@@ -1463,7 +1463,7 @@ public class BpNetwork extends SaveData implements Cloneable,Serializable
 				for(int n = 1; n< hidden_Neuron.length; n++)//第n层
 					for(int i = 0; i< hidden_Neuron[n].length; i++){
 						line = in.readLine();
-						Fuction actf = Fuction.getFunctionById(getSInt(line));
+						Function actf = Function.getFunctionById(getSInt(line));
 						line = in.readLine();
 						float d = getSFloat(line);
 						float[] w = new float[hid_n[n-1]];

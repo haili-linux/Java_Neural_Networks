@@ -1,7 +1,5 @@
 package haili.deeplearn.model.layer.softmax;
 
-import haili.deeplearn.Neuron;
-import haili.deeplearn.function.Fuction;
 import haili.deeplearn.model.layer.Layer;
 import haili.deeplearn.utils.SaveData;
 

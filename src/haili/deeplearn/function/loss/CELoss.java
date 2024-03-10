@@ -1,8 +1,8 @@
 package haili.deeplearn.function.loss;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 
-public class CELoss extends Fuction {
+public class CELoss extends Function {
     //交叉熵
     public CELoss(){
         super.id = 11;

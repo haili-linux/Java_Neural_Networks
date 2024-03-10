@@ -1,9 +1,9 @@
 package haili.deeplearn.function.activation;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.function.SourceCodeLib;
 
-public class LRelu extends Fuction {
+public class LRelu extends Function {
     public  LRelu(){
         super.id = 4;
         super.SourceCode = SourceCodeLib.Lrelu_code;

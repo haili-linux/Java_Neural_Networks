@@ -1,6 +1,6 @@
 package haili.deeplearn;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.function.activation.Sigmoid;
 
 import java.util.*;
@@ -19,7 +19,7 @@ public class Neuron implements Cloneable,Serializable
 	public float[] w;//权值
 	public float b;//偏移量,阈值
 
-	public Fuction ACT_function; // 激活函数
+	public Function ACT_function; // 激活函数
 	//public float[] data_list;//一个储存空间,和逻辑无关，灵活运用
 	//public float data = 0;//一个储存空间,和逻辑无关，灵活运用
 	
@@ -42,7 +42,7 @@ public class Neuron implements Cloneable,Serializable
 		//data_list = new float[input_n];
 	}
 
-	public Neuron(int n, Fuction act_function){
+	public Neuron(int n, Function act_function){
 		input_dimension = n;
 		w = new float[n];
 		b = /*(act_function.id==3) ? -0.8:*/ (float) Math.random()*2-1;
@@ -52,7 +52,7 @@ public class Neuron implements Cloneable,Serializable
 	}
 
 	//指定输入维度和偏置值
-	public Neuron(int n, float b, Fuction act_funtion){
+	public Neuron(int n, float b, Function act_funtion){
 		input_dimension = n;
 		w = new float[n];
 		this.b = b;

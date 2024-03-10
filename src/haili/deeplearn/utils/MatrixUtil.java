@@ -44,11 +44,12 @@ public class MatrixUtil {
         return x1;
     }
 
+    //数组合并
     public static float[] combine(float[] x1, float[] x2){
         float[] out = new float[x1.length + x2.length];
 
         System.arraycopy(x1, 0, out, 0, x1.length);
-        System.arraycopy(x1, 0, out, 0 + x1.length, x2.length);
+        System.arraycopy(x2, 0, out,  x1.length, x2.length);
 
         return out;
     }

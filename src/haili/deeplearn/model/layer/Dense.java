@@ -4,7 +4,7 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.Neuron;
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
@@ -15,20 +15,20 @@ public class Dense extends Layer{
 
     public Neuron[] neurons;
 
-    public Fuction activation;
+    //public Function activity_function;
 
-    public Dense(int input_Dimension, int output_Dimension, Fuction activation){
+    public Dense(int input_Dimension, int output_Dimension, Function activation){
         id = 1;
-        this.activation = activation;
+        this.activity_function = activation;
         this.output_dimension = output_Dimension;
         init(-1, -1, input_Dimension);
     }
 
 
-    public Dense(int output_Dimension, Fuction activation){
+    public Dense(int output_Dimension, Function activation){
         id = 1;
         this.output_dimension = output_Dimension;
-        this.activation = activation;
+        this.activity_function = activation;
         neurons = new Neuron[output_Dimension];
     }
 
@@ -41,13 +41,14 @@ public class Dense extends Layer{
         neurons = new Neuron[output_dimension];
 
         for (int i = 0; i < neurons.length; i++)
-            neurons[i] = new Neuron(input_dimension, activation);
+            neurons[i] = new Neuron(input_dimension, activity_function);
     }
 
 
     @Override
     public float[] forward(float[] inputs) {
         float[] output = new float[output_dimension];
+
         for (int i = 0; i < output.length; i++)
             output[i] = neurons[i].out_notSave(inputs);
 
@@ -60,7 +61,7 @@ public class Dense extends Layer{
      * @param inputs 本层输入
      * @param output 本层输出
      * @param deltas 下一层传回的梯度，对应本层每个神经元
-     * @return [0]传给下一层的梯度，对应下一层每个神经元, [1]:本层参数的梯度
+     * @return [0]传给上一层的梯度，对应上一层每个神经元, [1]:本层参数的梯度
      */
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
@@ -75,7 +76,6 @@ public class Dense extends Layer{
             w_b_deltas[index] = deltas[i];
             index++;
 
-
             for(int j = 0; j < neurons[i].w.length; j++) {
                 last_layer_deltas[j] += deltas[i] * neurons[i].w[j];
 
@@ -83,7 +83,6 @@ public class Dense extends Layer{
                 index++;
 
             }
-
         }
 
         return new float[][]{last_layer_deltas, w_b_deltas};
@@ -99,7 +98,6 @@ public class Dense extends Layer{
         int index = 0;
 
         for(int i = 0; i < neurons.length; i++){
-
             neurons[i].b -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
             index++;
 
@@ -108,7 +106,6 @@ public class Dense extends Layer{
                 index++;
             }
         }
-
     }
 
     @Override
@@ -150,7 +147,7 @@ public class Dense extends Layer{
             ni.input_dimension = input_dimension;
 
             int actFunctionID = SaveData.getSInt(in.readLine());
-            ni.ACT_function = Fuction.getFunctionById(actFunctionID);
+            ni.ACT_function = Function.getFunctionById(actFunctionID);
 
             ni.b = SaveData.getSFloat(in.readLine());
             ni.w = new float[input_dimension];
@@ -164,7 +161,7 @@ public class Dense extends Layer{
     @Override
     public String toString() {
         return "Dense{" +
-                "activation=" + activation +
+                "activation=" + activity_function +
                 ", input_dimension=" + input_dimension +
                 ", input_width=" + input_width +
                 ", input_height=" + input_height +

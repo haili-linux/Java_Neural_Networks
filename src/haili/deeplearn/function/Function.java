@@ -6,7 +6,7 @@ import haili.deeplearn.function.loss.CELoss;
 import haili.deeplearn.function.loss.CESLoss;
 import haili.deeplearn.function.loss.MSELoss;
 
-public class Fuction
+public class Function
 {
 
 	public int id = 0;
@@ -19,8 +19,8 @@ public class Fuction
 	public float f_derivative(float x){ return 1; }
 	public float f_derivative(float x1, float x2){ return 0; }
 
-	public static Fuction getFunctionById(int id){
-		Fuction r;
+	public static Function getFunctionById(int id){
+		Function r;
 		switch (id){
 			case 1: r = new Sigmoid(); break;
 			case 2: r = new Tanh();    break;
@@ -31,7 +31,7 @@ public class Fuction
 			case 10:r = new MSELoss(); break;
 			case 11:r = new CELoss();  break;
 			case 12:r = new CESLoss(); break;
-			default:r = new Fuction(); break;
+			default:r = new Function(); break;
 		}
 		return r;
 	}

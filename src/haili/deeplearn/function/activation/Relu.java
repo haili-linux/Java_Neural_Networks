@@ -1,9 +1,9 @@
 package haili.deeplearn.function.activation;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.function.SourceCodeLib;
 
-public class Relu extends Fuction
+public class Relu extends Function
 {
 	public Relu(){
 		super.id = 3;

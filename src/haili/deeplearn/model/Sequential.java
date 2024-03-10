@@ -1,7 +1,7 @@
 package haili.deeplearn.model;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.function.activation.Softmax;
 import haili.deeplearn.function.loss.MSELoss;
 import haili.deeplearn.model.layer.Dense;
@@ -21,7 +21,7 @@ public class Sequential extends Layer{
 
     public String EXPLAIN = "";
 
-    public Fuction Loss_Function = new MSELoss();
+    public Function Loss_Function = new MSELoss();
 
     public float loss = 0;
 
@@ -55,17 +55,17 @@ public class Sequential extends Layer{
 
     public void addLayer(Layer layer){
 
-        if(layer==this){
+        if(layer == this){
             System.out.println(" error!");
-            return;
+            System.exit(0);
         }
 
         layer.learn_rate = learn_rate;
 
         //layer初始化
         if(layer.input_dimension == 0 || layer.input_height == 0 || layer.input_width == 0){
-            if(layers.size() == 0){
-                if(input_width!=0 && input_height!=0 && input_dimension!=0)
+            if(layers.isEmpty()){
+                if( (input_width>0 && input_height>0) || input_dimension>0)
                     layer.init(input_width, input_height, input_dimension);
             } else {
                 Layer lastLayer = layers.get(layers.size()-1);
@@ -77,8 +77,8 @@ public class Sequential extends Layer{
         layers.add(layer);
 
         //是全连接层
-        if(layer.id == new Dense(1, new Fuction()).id) {
-            if (((Dense) layer).activation.id == new Softmax().id)//激活函数是softmax
+        if(layer.id == new Dense(1, new Function()).id) {
+            if (layer.activity_function.id == new Softmax().id)//激活函数是softmax
                 layers.add(new SoftmaxLayer(layer.output_dimension));
         }
 
@@ -88,15 +88,18 @@ public class Sequential extends Layer{
     }
 
   
-    public void setLoss_Function(Fuction loss_Function){
+    public void setLoss_Function(Function loss_Function){
         this.Loss_Function = loss_Function;
     }
+
+    @Override
     public void setLearn_rate(float learn_rate){
         this.learn_rate = learn_rate;
         for (Layer layer: layers){
-            layer.learn_rate = learn_rate;
+            layer.setLearn_rate(learn_rate);
         }
     }
+
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer){
         for (Layer layer: layers){
             layer.setDeltaOptimizer(deltaOptimizer);
@@ -248,7 +251,6 @@ public class Sequential extends Layer{
         }
     }
 
-
     //测试一个数据集上的误差
     public float calculateLoss(float[][] train_X, float[][] train_Y){
 
@@ -394,12 +396,16 @@ public class Sequential extends Layer{
     public void upgradeWeight(float[] weightDeltas) {
         int index = 0;
         for(int i = layers.size()-1; i >= 0; i--) {
-            float[] w_delta = new float[layers.get(i).getWeightNumber()];
-            if (w_delta.length >= 0) System.arraycopy(weightDeltas, index, w_delta, 0, w_delta.length);
-            index += w_delta.length;
-            layers.get(i).upgradeWeight(w_delta);
+            int w_number = layers.get(i).getWeightNumber();
+            if (w_number > 0) {
+                float[] w_delta = new float[w_number];
+                System.arraycopy(weightDeltas, index, w_delta, 0, w_number);
+                index += w_number;
+                layers.get(i).upgradeWeight(w_delta);
+            }
         }
     }
+
 
     @Override
     public int getWeightNumber() {
@@ -448,7 +454,7 @@ public class Sequential extends Layer{
 
         loss = SaveData.getSFloat(in.readLine());
         learn_rate = SaveData.getSFloat(in.readLine());
-        Loss_Function = Fuction.getFunctionById(SaveData.getSInt(in.readLine()));
+        Loss_Function = Function.getFunctionById(SaveData.getSInt(in.readLine()));
 
         while ((line=in.readLine()) != null){
             Layer layer = getLayerById(SaveData.getSInt(line));

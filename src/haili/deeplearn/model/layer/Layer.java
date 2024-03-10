@@ -2,7 +2,7 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.model.Sequential;
 import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 
@@ -20,6 +20,8 @@ public class Layer implements LayerInterface{
 
     public int output_dimension = 0;
     public int output_width = 0, output_height = 0;
+
+    public Function activity_function = new Function();
 
     protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
 
@@ -52,14 +54,19 @@ public class Layer implements LayerInterface{
 
     public void saveInFile(PrintWriter pw) throws Exception{ }
 
+    public void setLearn_rate(float learn_rate){
+        this.learn_rate = learn_rate;
+    }
+
     public static Layer getLayerById(int id){
         Layer layer;
         switch (id){
             case 0: layer = new Sequential(-1, -1, -1); break;
-            case 1: layer = new Dense(1, new Fuction()); break;
-            case 2: layer = new Conv2D(1,1,1,1, new Fuction()); break;
+            case 1: layer = new Dense(1, new Function()); break;
+            case 2: layer = new Conv2D(1,1,1,1, new Function()); break;
             case 3: layer = new Pooling2D(1,1); break;
             case 4: layer = new SoftmaxLayer(1); break;
+            case 5: layer = new ResBlock(ResBlock.ResConnectType_Add); break;
             default: layer = new Layer(); break;
         }
         return layer;

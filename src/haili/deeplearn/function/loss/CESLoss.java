@@ -1,8 +1,8 @@
 package haili.deeplearn.function.loss;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 
-public class CESLoss extends Fuction {
+public class CESLoss extends Function {
     public CESLoss(){
         super.id = 12;
     }

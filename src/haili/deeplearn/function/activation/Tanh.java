@@ -1,9 +1,9 @@
 package haili.deeplearn.function.activation;
 
-import haili.deeplearn.function.Fuction;
+import haili.deeplearn.function.Function;
 import haili.deeplearn.function.SourceCodeLib;
 
-public class Tanh extends Fuction
+public class Tanh extends Function
 {
 	public Tanh(){
 		super.id = 2;
