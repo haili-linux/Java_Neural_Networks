@@ -240,6 +240,7 @@ public class ResBlock extends Layer{
     public void saveInFile(PrintWriter pw) throws Exception {
         pw.println(SaveData.sInt("Layer_ID", id));
 
+        pw.println(SaveData.sInt("ResConnectType", ResConnectType));
         pw.println(SaveData.sInt("input_Dimension", input_dimension));
         pw.println(SaveData.sInt("input_width", input_width));
         pw.println(SaveData.sInt("input_height", input_height));
@@ -256,7 +257,7 @@ public class ResBlock extends Layer{
 
     @Override
     public void initByFile(BufferedReader in) throws Exception {
-
+        ResConnectType = SaveData.getSInt(in.readLine());
         input_dimension = SaveData.getSInt(in.readLine());
         input_width = SaveData.getSInt(in.readLine());
         input_height = SaveData.getSInt(in.readLine());
