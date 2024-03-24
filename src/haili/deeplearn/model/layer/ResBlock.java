@@ -55,10 +55,14 @@ public class ResBlock extends Layer{
     private ArrayList<float[]> forward_list(float[] inputs){
         ArrayList<float[]> output = new ArrayList<>();
         output.add( layers.get(0).forward(inputs) );
-
         for(int i = 1; i < layers.size(); i++){
-            output.add( layers.get(i).forward(output.get(i-1)) );
+            output.add(layers.get(i).forward(output.get(i-1)) );
         }
+
+        float[] last_out = output.get(output.size() - 1);
+        for(int i = 0; i < last_out.length; i++)
+            last_out[i] = this.activity_function.f(last_out[i]);
+
         return output;
     }
 
@@ -100,8 +104,6 @@ public class ResBlock extends Layer{
         int index = 0;
 
 
-
-
         float[][] back = new float[2][];
         //back[0] = deltas;
 
@@ -134,37 +136,47 @@ public class ResBlock extends Layer{
 
             System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
 
-        } else if(ResConnectType == ResConnectType_Concat) {
-            //残差连接方式1: 拼接
-            int outLayer_dimension = layers.get(layers.size()-1).output_dimension;
-            float[] deltas_lastLayer = new float[outLayer_dimension];
-            float[] out_lastLayer = new float[outLayer_dimension];
-            int var0 = output_list.size() - 1;
-            for(int i = 0; i < deltas_lastLayer.length; i++){
-                deltas_lastLayer[i] = deltas[i] * activity_function.f_derivative(output[i]);
-                out_lastLayer[i] = output_list.get(var0)[i];
-            }
+        } else
+            if (ResConnectType == ResConnectType_Concat) {
+                //残差连接方式1: 拼接
+                float[] input_lastLayer;
+                if (layers.size() == 1)
+                    input_lastLayer = inputs;
+                else
+                    input_lastLayer = output_list.get(output_list.size() - 2);
 
-            // 输出层
-            back = layers.get(var0).backward(output_list.get(var0 - 1), out_lastLayer, deltas_lastLayer);
+                float[] out_lastLayer = output_list.get(output_list.size() - 1);
+                int outLayer_dimension = out_lastLayer.length;
+                float[] deltas_lastLayer = new float[outLayer_dimension];
 
-            for (int i = output_list.size() - 2; i > 0; i--) {
-                back = layers.get(i).backward(output_list.get(i - 1), output_list.get(i), back[0]);
+                int var0 = output_list.size() - 1;
+                float[] out_last = output_list.get(var0);
+                for (int i = 0; i < deltas_lastLayer.length; i++) {
+                    deltas_lastLayer[i] = deltas[i] * activity_function.f_derivative(output[i]);
+                    out_lastLayer[i] = out_last[i];
+                }
 
-                if (back[1] == null)
-                    System.out.println(Arrays.toString(back[1]) + "   " + layers.get(i));
-
+                // 输出层
+                back = layers.get(var0).backward(input_lastLayer, out_lastLayer, deltas_lastLayer);
                 System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
                 index += back[1].length;
+
+                //layers.size() == 1 时，输入层等于输出层
+                if (layers.size() > 1) {
+                    for (int i = output_list.size() - 2; i > 0; i--) {
+                        back = layers.get(i).backward(output_list.get(i - 1), output_list.get(i), back[0]);
+                        System.arraycopy(back[1], 0, w_deltas, index, back[1].length); //储存w的梯度
+                        index += back[1].length;
+                    }
+
+                    //输入层
+                    back = layers.get(0).backward(inputs, output_list.get(0), back[0]);
+                    System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
+                }
+
+                for (int i = 0; i < back[0].length; i++)
+                    back[0][i] += deltas[outLayer_dimension + i];
             }
-
-            back = layers.get(0).backward(inputs, output_list.get(0), back[0]);
-
-            for(int i = 0; i < back[0].length; i++)
-                back[0][i] += deltas[outLayer_dimension + i];
-
-            System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
-        }
 
         return new float[][]{back[0], w_deltas};
     }
@@ -251,6 +263,7 @@ public class ResBlock extends Layer{
 
         pw.println(SaveData.sFloat("learn_rate", learn_rate));
 
+        pw.println(SaveData.sInt("layer_number", layers.size()));
         for (Layer layer : layers)
             layer.saveInFile(pw);
     }
@@ -268,14 +281,36 @@ public class ResBlock extends Layer{
 
         learn_rate = SaveData.getSFloat(in.readLine());
 
+        int layer_num = SaveData.getSInt(in.readLine());
+
         String line = null;
         while ((line = in.readLine()) != null){
             Layer layer = getLayerById(SaveData.getSInt(line));
             layer.initByFile(in);
             layers.add(layer);
+
+            if(layers.size() == layer_num)
+                break;
         }
 
         setLearn_rate(learn_rate);
     }
 
+    @Override
+    public String toString() {
+        return "ResBlock{" +
+                "ResConnectType=" + ResConnectType +
+                ", layers=" + layers +
+                ", id=" + id +
+                ", learn_rate=" + learn_rate +
+                ", input_dimension=" + input_dimension +
+                ", input_width=" + input_width +
+                ", input_height=" + input_height +
+                ", output_dimension=" + output_dimension +
+                ", output_width=" + output_width +
+                ", output_height=" + output_height +
+                ", activity_function=" + activity_function +
+                ", deltaOptimizer=" + deltaOptimizer +
+                '}';
+    }
 }

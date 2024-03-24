@@ -33,6 +33,13 @@ public class Layer implements LayerInterface{
         return new float[0];
     }
 
+    /**
+     * 反向传播
+     * @param inputs 本层输入
+     * @param output 本层输出
+     * @param deltas 下一层传回的梯度，对应本层每个神经元
+     * @return [0]传给上一层的梯度，对应上一层每个神经元, [1]:本层参数的梯度
+     */
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         return new float[0][];
@@ -67,6 +74,7 @@ public class Layer implements LayerInterface{
             case 3: layer = new Pooling2D(1,1); break;
             case 4: layer = new SoftmaxLayer(1); break;
             case 5: layer = new ResBlock(ResBlock.ResConnectType_Add); break;
+            case 6: layer = new Conv2DTranspose(1,1,1,1, new Function()); break;
             default: layer = new Layer(); break;
         }
         return layer;

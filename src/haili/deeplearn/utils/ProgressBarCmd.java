@@ -10,6 +10,7 @@ public class ProgressBarCmd {
 
     String title;
     String backString;
+    int lastLen = 0;
 
     public ProgressBarCmd(int total, int pixel_number){
         title = "";
@@ -50,13 +51,22 @@ public class ProgressBarCmd {
         char[] wait = new char[pixel_number - p];
         Arrays.fill(wait, '.');
 
-        int percentage_int = (int) (percentage * 100);
+        double percentage_double = percentage * 100;
+        int percentage_int = (int) percentage_double;
 
         String p_str = "" + percentage_int;
+        if(p_str.length() > 5)
+            p_str = p_str.substring(0, 5);
+
         if(percentage_int < 10) p_str = "  " + p_str;
         else if(percentage_int < 100) p_str = " " + p_str;
 
+
+
         String progress = title + "[" + new String(did) + new String(wait) + "] " + p_str + "%";
+        //lastLen = progress.length();
+
+
 
         return backString + progress;
     }

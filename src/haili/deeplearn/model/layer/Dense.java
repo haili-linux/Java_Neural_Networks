@@ -32,11 +32,31 @@ public class Dense extends Layer{
         neurons = new Neuron[output_Dimension];
     }
 
+    public Dense(int input_width, int input_height, int output_width, int output_height, int output_dimension , Function activation){
+        this.input_dimension = input_width * input_height;
+        this.output_width = output_width;
+        this.output_height = output_height;
+        id = 1;
+        this.activity_function = activation;
+        this.output_dimension = output_dimension;
+        init(input_width, input_height, this.input_dimension);
+    }
 
+//    public Dense(int output_width, int output_height, Function activation){
+//        this.input_dimension = input_width * input_height;
+//        this.output_width = output_width;
+//        this.output_height = output_height;
+//        id = 1;
+//        this.activity_function = activation;
+//        this.output_dimension = output_width * output_height;
+//        init(-1, -1, this.input_dimension);
+//    }
 
 
     @Override
     public void init(int input_width, int input_height, int input_dimension){
+        this.input_width = input_width;
+        this.input_height = input_height;
         this.input_dimension = input_dimension;
         neurons = new Neuron[output_dimension];
 

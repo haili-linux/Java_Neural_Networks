@@ -162,9 +162,14 @@ public class Sequential extends Layer{
         }
     }
 
-    private void upgradeBatch(float[][] train_X, float[][] train_Y, int threadNumber){
+    /**
+     * @param threadNumber 使用的线程数量
+     * @return 模型的参数的梯度
+     */
+    public float[][] gradient(float[][] train_X, float[][] train_Y, int threadNumber) {
+        // bach中每个的梯度
         float[][][] deltas = new float[train_X.length][][];
-        ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(train_X.length){
+        ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(train_X.length) {
             @Override
             public void working(int index) {
                 deltas[index] = backward(train_X[index], train_Y[index]);
@@ -173,17 +178,17 @@ public class Sequential extends Layer{
         };
         ThreadWork.start(threadWorker, threadNumber);
 
+        // 求bach中的梯度均值
+        for (int i = 0; i < deltas[0].length; i++) {
 
-        for(int i = 0; i < deltas[0].length; i++) {
-
-            if(deltas[0][i]==null) continue;
+            if (deltas[0][i] == null) continue;
 
             int n = deltas[0][i].length;
             final int layerIndex = i;
             ThreadWork.ThreadWorker threadWorker2 = new ThreadWork.ThreadWorker(n) {
                 @Override
                 public void working(int index) {
-                    for (int i = 0; i < deltas.length; i++){
+                    for (int i = 0; i < deltas.length; i++) {
                         deltas[0][layerIndex][index] += deltas[i][layerIndex][index];
                     }
                     deltas[0][layerIndex][index] /= deltas.length;
@@ -193,8 +198,14 @@ public class Sequential extends Layer{
             threadWorker2.setStart_index(1);
             ThreadWork.start(threadWorker2, threadNumber);
         }
+        return deltas[0];
+    }
 
-        upgradeWeight(deltas[0]);
+    private void upgradeBatch(float[][] train_X, float[][] train_Y, int threadNumber){
+        //计算参数梯度
+        float[][] deltas_layer = gradient(train_X, train_Y,  threadNumber);
+        //使用梯度均值更新模型权重
+        upgradeWeight(deltas_layer);
     }
 
 
@@ -203,7 +214,7 @@ public class Sequential extends Layer{
      * @param inputs inputs
      * @return 网络每层的的输出
      */
-    private ArrayList<float[]> forward_list(float[] inputs){
+    public ArrayList<float[]> forward_list(float[] inputs){
         ArrayList<float[]> output = new ArrayList<>();
         output.add( layers.get(0).forward(inputs) );
 
@@ -241,8 +252,8 @@ public class Sequential extends Layer{
 
 
     /**
-     * 更新梯度
-     * @param w_deltas backward()返回的梯度
+     * 更新权重梯度
+     * @param w_deltas gradient()返回的梯度
      */
     public void upgradeWeight(float[][] w_deltas){
         for(int i = layers.size()-1; i > 0; i--) {
@@ -283,13 +294,15 @@ public class Sequential extends Layer{
 
 
     //计算loss层梯度
-    private float[] lossDelta(float[] out, float[] y_train){
+    public float[] lossDelta(float[] out, float[] y_train){
         float[] delta = new float[y_train.length];
+
         for(int i = 0; i < y_train.length; i++){
             delta[i] = Loss_Function.f_derivative(out[i], y_train[i]);
         }
         return delta;
     }
+
     private float loss(float[] x, float[] y){
         float loss = 0;
         float[] oi = forward(x);
@@ -468,12 +481,20 @@ public class Sequential extends Layer{
     @Override
     public String toString() {
         return "Sequential{" +
-                "input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", input_Dimension=" + input_dimension +
+                "EXPLAIN='" + EXPLAIN + '\'' +
                 ", Loss_Function=" + Loss_Function +
+                ", loss=" + loss +
                 ", learn_rate=" + learn_rate +
                 ", layers=" + layers +
+                ", learn_rate=" + learn_rate +
+                ", input_dimension=" + input_dimension +
+                ", input_width=" + input_width +
+                ", input_height=" + input_height +
+                ", output_dimension=" + output_dimension +
+                ", output_width=" + output_width +
+                ", output_height=" + output_height +
+                ", activity_function=" + activity_function +
+                ", deltaOptimizer=" + deltaOptimizer +
                 '}';
     }
 }

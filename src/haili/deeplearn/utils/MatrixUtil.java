@@ -22,10 +22,13 @@ public class MatrixUtil {
 
 
     public static float[] multi(float x1, float[] x2){
-        for (int i = 0; i < x2.length; i++) x2[i] *= x1;
+        float[] r = new float[x2.length];
+        for (int i = 0; i < x2.length; i++)
+            r[i] = x1 * x2[i];
 
-        return x2;
+        return r;
     }
+
 
 
     public static float[] add(float[] x1, float[] x2){
@@ -39,9 +42,11 @@ public class MatrixUtil {
             return null;
         }
 
-        for (int i = 0; i < x1.length; i++) x1[i] += x2[i];
+        float[] r = new float[x1.length];
+        for (int i = 0; i < r.length; i++)
+            r[i] = x1[i] + x2[i];
 
-        return x1;
+        return r;
     }
 
     //数组合并

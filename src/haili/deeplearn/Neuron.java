@@ -33,18 +33,18 @@ public class Neuron implements Cloneable,Serializable
 	}
 
 	//指定输入维度
-    public Neuron(int n){
-		input_dimension = n;
-		w = new float[n];
+    public Neuron(int input_dimension){
+		this.input_dimension = input_dimension;
+		w = new float[input_dimension];
 		b = (float) Math.random()*2 - 1;
 		init();
 		ACT_function = new Sigmoid();
 		//data_list = new float[input_n];
 	}
 
-	public Neuron(int n, Function act_function){
-		input_dimension = n;
-		w = new float[n];
+	public Neuron(int input_dimension, Function act_function){
+		this.input_dimension = input_dimension;
+		w = new float[input_dimension];
 		b = /*(act_function.id==3) ? -0.8:*/ (float) Math.random()*2-1;
 		init();
 		ACT_function = act_function;
@@ -52,9 +52,9 @@ public class Neuron implements Cloneable,Serializable
 	}
 
 	//指定输入维度和偏置值
-	public Neuron(int n, float b, Function act_funtion){
-		input_dimension = n;
-		w = new float[n];
+	public Neuron(int input_dimension, float b, Function act_funtion){
+		this.input_dimension = input_dimension;
+		w = new float[input_dimension];
 		this.b = b;
 		init();
 		ACT_function = act_funtion;
@@ -89,7 +89,7 @@ public class Neuron implements Cloneable,Serializable
 		float x = 0;
 		for(int i = 0; i< input_dimension; i++)
 			x += w[i] * in[i];
-		x += -b;
+		x += b;
 		//lastIn = x;
 		//return  lastOut = ACT_function.f(x);
 		return  ACT_function.f(x);
@@ -100,7 +100,7 @@ public class Neuron implements Cloneable,Serializable
 		float x = 0;
 		for(int i = 0; i< input_dimension; i++)
 			x += w[i] * in[i];
-		x += -b;
+        x += b;
 		return  act_f(x);
 	}
 
@@ -108,7 +108,7 @@ public class Neuron implements Cloneable,Serializable
 		float x = 0;
 		for(int i = 0; i< input_dimension; i++)
 			x += w[i] * in[i];
-		x += -b;
+        x += b;
 		return  x;
 	}
 

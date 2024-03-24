@@ -15,8 +15,8 @@ public class Conv2D extends Layer{
 
     int kernel_width, kernel_height, step;
 
-    int filters;
-    int channels;
+    int filters; //卷积核数量
+    int channels;  //kernel_y:相当于卷积核的第三个维度z. x,y,z
 
     public float[][][] w;
     public float[] bias;
@@ -73,7 +73,7 @@ public class Conv2D extends Layer{
 
         if(input_dimension % (input_width * input_height) != 0){
             System.out.println(this.getClass().toString() + "  Error: input_dimension % (input_width * input_height) != 0" );
-            return;
+            System.exit(0);
         }
 
         channels = input_dimension / (input_width * input_height);
@@ -81,8 +81,12 @@ public class Conv2D extends Layer{
         bias = new float[filters];
 
         for(int i = 0; i < filters; i++)
-            for(int j = 0; j < channels; j++)
+            for(int j = 0; j < channels; j++) {
                 w[i][j] = new Neuron(kernel_width * kernel_height).w;
+                for (int k = 0; k < w[i][j].length; k++){
+                    w[i][j][k] /= channels;
+                }
+            }
 
 
         //超出就忽略
@@ -137,7 +141,7 @@ public class Conv2D extends Layer{
                             outputs[index] += inputs[k_index[j]] * w[filters_i][channels_j][j];
 
                             if (iw == output_width - 1)
-                                k_index[j] += kernel_width;
+                                k_index[j] += (step - 1) * input_width + kernel_width;
                             else
                                 k_index[j] += step;
                         }
@@ -199,10 +203,10 @@ public class Conv2D extends Layer{
                                 float delta = deltas[index] * inputs[k_index[j]];
                                 w_delta[w_channel_dx + j] += delta;
 
-                                //last_layer_deltas[k_index[j]] += deltas[index] * w[j];
+                                last_layer_deltas[k_index[j]] += deltas[index] * w[filters_i][channels_j][j];
 
                                 if (iw == output_width - 1)
-                                    k_index[j] += kernel_width;
+                                    k_index[j] += (step - 1) * input_width + kernel_width;
                                 else
                                     k_index[j] += step;
                             }
