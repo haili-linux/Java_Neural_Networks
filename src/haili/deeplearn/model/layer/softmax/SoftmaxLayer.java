@@ -14,6 +14,10 @@ public class SoftmaxLayer extends Layer {
         this.output_dimension = input_dimension;
     }
 
+    public SoftmaxLayer(){
+        id = 4;
+    }
+
     @Override
     public float[] forward(float[] inputs) {
         float total = 0;

@@ -29,7 +29,7 @@ public class Dense extends Layer{
         id = 1;
         this.output_dimension = output_Dimension;
         this.activity_function = activation;
-        neurons = new Neuron[output_Dimension];
+        //neurons = new Neuron[output_Dimension];
     }
 
     public Dense(int input_width, int input_height, int output_width, int output_height, int output_dimension , Function activation){
@@ -52,9 +52,12 @@ public class Dense extends Layer{
 //        init(-1, -1, this.input_dimension);
 //    }
 
-
     @Override
     public void init(int input_width, int input_height, int input_dimension){
+
+        if(neurons != null)
+            return;
+
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_dimension;
@@ -135,9 +138,13 @@ public class Dense extends Layer{
         super.setDeltaOptimizer(deltaOptimizer);
     }
 
+    int WeightNumber = -1;
     @Override
     public int getWeightNumber() {
-        return (input_dimension + 1) * output_dimension;
+        if(WeightNumber == -1)
+            WeightNumber =(input_dimension + 1) * output_dimension;
+
+        return WeightNumber;
     }
 
     @Override

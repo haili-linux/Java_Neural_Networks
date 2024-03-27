@@ -162,11 +162,26 @@ public class Sequential extends Layer{
         }
     }
 
+    public void setSaveHiddenLayerOutput(boolean b){
+        this.saveHiddenLayerOutput = b;
+        for (Layer layer: layers)
+            layer.setSaveHiddenLayerOutput(b);
+    }
+
+    public void clearHiddenLayerOutput(){
+        this.hiddenLayerOutputMap.clear();
+        for (Layer layer: layers)
+            layer.clearHiddenLayerOutput();
+    }
+
     /**
      * @param threadNumber 使用的线程数量
      * @return 模型的参数的梯度
      */
     public float[][] gradient(float[][] train_X, float[][] train_Y, int threadNumber) {
+
+        setSaveHiddenLayerOutput(true);
+
         // bach中每个的梯度
         float[][][] deltas = new float[train_X.length][][];
         ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(train_X.length) {
@@ -198,6 +213,11 @@ public class Sequential extends Layer{
             threadWorker2.setStart_index(1);
             ThreadWork.start(threadWorker2, threadNumber);
         }
+
+        // 清楚中间变量缓存
+        setSaveHiddenLayerOutput(false);
+        clearHiddenLayerOutput();
+
         return deltas[0];
     }
 
@@ -215,12 +235,25 @@ public class Sequential extends Layer{
      * @return 网络每层的的输出
      */
     public ArrayList<float[]> forward_list(float[] inputs){
-        ArrayList<float[]> output = new ArrayList<>();
+        ArrayList<float[]> output;
+        if(saveHiddenLayerOutput && hiddenLayerOutputMap.containsKey(inputs)) {
+            output = (ArrayList<float[]>) hiddenLayerOutputMap.get(inputs);
+            if(output != null)
+                return output;
+        }
+
+        output = new ArrayList<>();
         output.add( layers.get(0).forward(inputs) );
 
         for(int i = 1; i < layers.size(); i++){
             output.add( layers.get(i).forward(output.get(i-1)) );
         }
+
+        // 保存中间输出
+        if(saveHiddenLayerOutput){
+            hiddenLayerOutputMap.put(inputs, output);
+        }
+
         return output;
     }
 
@@ -376,11 +409,14 @@ public class Sequential extends Layer{
 
     @Override
     public float[] forward(float[] inputs){
+        /*
         float[] out = layers.get(0).forward(inputs);
         for(int i = 1; i < layers.size(); i++){
             out = layers.get(i).forward(out);
         }
-        return out;
+        */
+        ArrayList<float[]> output_list = forward_list(inputs);
+        return output_list.get(output_list.size() - 1);
     }
 
     @Override

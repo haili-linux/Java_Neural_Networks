@@ -47,22 +47,44 @@ public class ResBlock extends Layer{
     }
 
 
+    public void setSaveHiddenLayerOutput(boolean b){
+        this.saveHiddenLayerOutput = b;
+        for (Layer layer: layers)
+            layer.setSaveHiddenLayerOutput(b);
+    }
+
+    public void clearHiddenLayerOutput(){
+        this.hiddenLayerOutputMap.clear();
+        for (Layer layer: layers)
+            layer.clearHiddenLayerOutput();
+    }
+
+
     /**
      * output
      * @param inputs inputs
      * @return 网络每层的的输出
      */
     private ArrayList<float[]> forward_list(float[] inputs){
-        ArrayList<float[]> output = new ArrayList<>();
-        output.add( layers.get(0).forward(inputs) );
-        for(int i = 1; i < layers.size(); i++){
-            output.add(layers.get(i).forward(output.get(i-1)) );
+        ArrayList<float[]> output;
+        // 如果有缓存，从缓存读取，不需要重新计算
+        if(saveHiddenLayerOutput && hiddenLayerOutputMap.containsKey(inputs)) {
+            output = (ArrayList<float[]>) hiddenLayerOutputMap.get(inputs);
+            if(output != null)
+                return output;
         }
 
-        float[] last_out = output.get(output.size() - 1);
-        for(int i = 0; i < last_out.length; i++)
-            last_out[i] = this.activity_function.f(last_out[i]);
+        output = new ArrayList<>();
+        output.add( layers.get(0).forward(inputs) );
 
+        for(int i = 1; i < layers.size(); i++){
+            output.add( layers.get(i).forward(output.get(i-1)) );
+        }
+
+        // 保存中间输出
+        if(saveHiddenLayerOutput){
+            hiddenLayerOutputMap.put(inputs, output);
+        }
         return output;
     }
 
@@ -224,13 +246,17 @@ public class ResBlock extends Layer{
         }
     }
 
+    int WeightNumber = -1;
     @Override
     public int getWeightNumber() {
-        int number = 0;
-        for(Layer layer: layers)
-            number += layer.getWeightNumber();
+        if(WeightNumber == -1) {
+            int number = 0;
+            for (Layer layer : layers)
+                number += layer.getWeightNumber();
 
-        return number;
+            WeightNumber = number;
+        }
+        return WeightNumber;
     }
 
     @Override

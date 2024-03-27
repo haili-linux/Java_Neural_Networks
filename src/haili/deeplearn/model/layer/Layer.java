@@ -8,6 +8,9 @@ import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Layer implements LayerInterface{
 
@@ -24,6 +27,12 @@ public class Layer implements LayerInterface{
     public Function activity_function = new Function();
 
     protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
+
+    //是否保存中间变量
+    public boolean saveHiddenLayerOutput = false;
+
+    //用于保存中间变量
+    public Map<float[], Object> hiddenLayerOutputMap = new HashMap<>();
 
     @Override
     public void init(int input_width, int input_height, int input_Dimension) { }
@@ -65,7 +74,15 @@ public class Layer implements LayerInterface{
         this.learn_rate = learn_rate;
     }
 
-    public static Layer getLayerById(int id){
+    public void setSaveHiddenLayerOutput(boolean b){
+        this.saveHiddenLayerOutput = b;
+    }
+
+    public void clearHiddenLayerOutput(){
+        this.hiddenLayerOutputMap.clear();
+    }
+
+    public final static Layer getLayerById(int id){
         Layer layer;
         switch (id){
             case 0: layer = new Sequential(-1, -1, -1); break;
@@ -75,6 +92,7 @@ public class Layer implements LayerInterface{
             case 4: layer = new SoftmaxLayer(1); break;
             case 5: layer = new ResBlock(ResBlock.ResConnectType_Add); break;
             case 6: layer = new Conv2DTranspose(1,1,1,1, new Function()); break;
+            case 7: layer = new SelfAttention(1,1,1); break;
             default: layer = new Layer(); break;
         }
         return layer;
