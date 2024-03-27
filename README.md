@@ -4,7 +4,7 @@
 主要内容:
 1. 类似TensorFlow的Sequential类创建模型。
 2. 以层Layer为最基础模块(Sequential也可以视为层)，可对层forward、backword，求解层的权重参数的Gradient。
-3. 支持的层如下: Dense、Conv2D、Pooling2D、Conv2DTranspose、ResBlock。可根据Layer基类自定义层。
+3. 支持的层如下: Dense、Conv2D、Pooling2D、Conv2DTranspose、ResBlock、SelfAttention。可根据Layer基类自定义层。
 4. 常见activation和loss，如sigmoid、tanh、rule、LRelu、softmax。mseloss、celoss。
 5. 支持Adam梯度下降优化。
 6. 可以多线程并行mini-batch训练。
