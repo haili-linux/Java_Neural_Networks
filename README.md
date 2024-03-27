@@ -1,5 +1,5 @@
 # Java_Neural_Networks
-   完全基于java的神经网络，可用于java以下创建和训练较小的神经网络模型。出于学习机器学习底层原理目的编写。可以创建cnn、resNet、gan、autoencode等模型。
+   完全使用java编写，可用于java以下创建和训练较小的神经网络模型。出于学习机器学习底层原理目的编写。可以创建cnn、resNet、gan、autoencode等模型。
 
 主要内容:
 1. 类似TensorFlow的Sequential类创建模型。
