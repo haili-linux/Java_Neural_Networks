@@ -55,12 +55,14 @@ public class Dense extends Layer{
     @Override
     public void init(int input_width, int input_height, int input_dimension){
 
-        if(neurons != null)
-            return;
 
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_dimension;
+
+        if(neurons != null)
+            return;
+
         neurons = new Neuron[output_dimension];
 
         for (int i = 0; i < neurons.length; i++)
