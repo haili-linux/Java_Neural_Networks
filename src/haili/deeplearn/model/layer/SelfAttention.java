@@ -16,6 +16,11 @@ public class SelfAttention extends Layer{
     Dense q_layer, k_layer, v_layer;
     Layer scoreLayer = new SoftmaxLayer();
 
+    /**
+     * @param one_input_vector_dimension 一个单位输入向量的维度
+     * @param one_output_vector_dimension 一个单位输出向量的维度
+     * @param Q_K_dimension q k 的大小
+     */
     public SelfAttention(int one_input_vector_dimension, int one_output_vector_dimension, int Q_K_dimension){
         this.id = 7;
         this.input_width = one_input_vector_dimension;
