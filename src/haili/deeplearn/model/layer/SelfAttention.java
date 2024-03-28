@@ -15,6 +15,7 @@ public class SelfAttention extends Layer{
 
     Dense q_layer, k_layer, v_layer;
     Layer scoreLayer = new SoftmaxLayer();
+
     public SelfAttention(int one_input_vector_dimension, int one_output_vector_dimension, int Q_K_dimension){
         this.id = 7;
         this.input_width = one_input_vector_dimension;
@@ -53,6 +54,8 @@ public class SelfAttention extends Layer{
 
     private float[][][] forwardList(float[] inputs){
         float[][][] r = new float[6][][];
+        float sqrt_d =  (float) Math.sqrt(q_layer.output_dimension);
+
         // 当前输入的seq数量
         int seqLen = inputs.length / input_width;
         float[] outputs = new float[seqLen * output_width];
@@ -76,7 +79,7 @@ public class SelfAttention extends Layer{
         float[][] score = new float[seqLen][seqLen];
         for(int i = 0; i < seqLen; i++) {
             for(int j = 0; j < seqLen; j++) {
-                score[i][j] = MatrixUtil.dot(q[i], k[j]);
+                score[i][j] = MatrixUtil.dot(q[i], k[j]) / sqrt_d;
             }
 
             // 对相关分数处理，默认经过softmax
@@ -86,7 +89,7 @@ public class SelfAttention extends Layer{
             int od =  i * output_width;
             for(int ik = 0; ik < output_width; ik++) {
                 for (int ij = 0; ij < seqLen; ij++) {
-                    outputs[od + ik] += score[i][ij] * v[ij][ik];
+                    outputs[od + ik] +=  (score[i][ij] * v[ij][ik]);
                 }
             }
         }
@@ -112,6 +115,8 @@ public class SelfAttention extends Layer{
         // 当前输入的seq数量
         int seqLen = inputs.length / input_width;
 
+        float sqrt_d =  (float) Math.sqrt(q_layer.output_dimension);
+
         float[][][] forwardOut = forward_list(inputs);
         float[][] inputs_ = forwardOut[0];
         float[][] q = forwardOut[1];
@@ -129,10 +134,11 @@ public class SelfAttention extends Layer{
             int od =  i * output_width;
             for(int ik = 0; ik < output_width; ik++) {
                 for (int ij = 0; ij < seqLen; ij++) {
-                    score_deltas[i][ij] +=  v[ij][ik] * deltas[od + ik];
-                    v_deltas[ij][ik] += score[i][ij] * deltas[od + ik];
+                    score_deltas[i][ij] +=  v[ij][ik] * deltas[od + ik] / sqrt_d;
+                    v_deltas[ij][ik] += score[i][ij] * deltas[od + ik] / sqrt_d;
                 }
             }
+
 
             score_deltas[i] = scoreLayer.backward(null, score[i],  score_deltas[i])[0];
 
