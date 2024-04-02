@@ -131,8 +131,8 @@ public class ResBlock extends Layer{
 
         if(ResConnectType == ResConnectType_Add){
             //残差连接方式0: 相加
-            float[] resDeltas = new float[output_dimension];
-            for(int i = 0; i < output_dimension; i++) {
+            float[] resDeltas = new float[output.length];
+            for(int i = 0; i < output.length; i++) {
                 deltas[i] *= activity_function.f_derivative(output[i]);
                 resDeltas[i] = deltas[i];
             }
@@ -213,7 +213,7 @@ public class ResBlock extends Layer{
         if(ResConnectType == ResConnectType_Add){
             //残差连接方式0: 相加
             if(this.input_dimension != this.output_dimension){
-                System.out.println(" ResBlock " + this.toString() + ": 输入和输出的维度不一致。this.input_dimension != this.output_dimension!");
+                System.out.println(" ResBlock " + this.toString() + ": \n输入和输出的维度不一致。this.input_dimension != this.output_dimension!  input:"  );
                 System.exit(0);
             } else {
                 //跨层连接

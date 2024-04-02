@@ -2,16 +2,16 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.function.Function;
-import haili.deeplearn.function.activation.Softmax;
 import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 import haili.deeplearn.utils.MatrixUtil;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+
 
 public class SelfAttention extends Layer{
+
 
     Dense q_layer, k_layer, v_layer;
     Layer scoreLayer = new SoftmaxLayer();
@@ -25,6 +25,7 @@ public class SelfAttention extends Layer{
         this.id = 7;
         this.input_width = one_input_vector_dimension;
         this.output_width = one_output_vector_dimension;
+        this.output_dimension = one_output_vector_dimension;
 
         q_layer = new Dense(one_input_vector_dimension, Q_K_dimension, new Function());
         k_layer = new Dense(one_input_vector_dimension, Q_K_dimension, new Function());
@@ -32,6 +33,7 @@ public class SelfAttention extends Layer{
 
         init(0, 0, 0);
     }
+
 
     @Override
     public void init(int input_width, int input_height, int input_Dimension) {
@@ -118,7 +120,7 @@ public class SelfAttention extends Layer{
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         // 当前输入的seq数量
-        int seqLen = inputs.length / input_width;
+        int seqLen = deltas.length / output_width;
 
         float sqrt_d =  (float) Math.sqrt(q_layer.output_dimension);
 

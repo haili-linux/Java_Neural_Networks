@@ -174,13 +174,17 @@ public class Sequential extends Layer{
             layer.clearHiddenLayerOutput();
     }
 
+
+    public boolean SaveHiddenLayerOutput = false;
+
     /**
      * @param threadNumber 使用的线程数量
      * @return 模型的参数的梯度
      */
     public float[][] gradient(float[][] train_X, float[][] train_Y, int threadNumber) {
 
-        setSaveHiddenLayerOutput(true);
+        if(SaveHiddenLayerOutput)
+            setSaveHiddenLayerOutput(SaveHiddenLayerOutput);
 
         // bach中每个的梯度
         float[][][] deltas = new float[train_X.length][][];
@@ -214,9 +218,11 @@ public class Sequential extends Layer{
             ThreadWork.start(threadWorker2, threadNumber);
         }
 
-        // 清楚中间变量缓存
-        setSaveHiddenLayerOutput(false);
-        clearHiddenLayerOutput();
+        if(SaveHiddenLayerOutput) {
+            // 清楚中间变量缓存
+            setSaveHiddenLayerOutput(false);
+            clearHiddenLayerOutput();
+        }
 
         return deltas[0];
     }
