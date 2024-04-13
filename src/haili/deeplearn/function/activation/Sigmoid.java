@@ -27,4 +27,9 @@ public class Sigmoid extends Function
 		//float x1 = f(x);
 		return x1 * (1.0f - x1);
 	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "Sigmoid";
+	}
 }

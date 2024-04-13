@@ -29,5 +29,9 @@ public class Tanh extends Function
 		return 1 - x1*x1;
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + "Tanh";
+	}
 
 }

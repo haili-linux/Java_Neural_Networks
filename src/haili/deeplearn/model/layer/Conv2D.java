@@ -34,7 +34,7 @@ public class Conv2D extends Layer{
         this.channels = channels;
         this.step = step;
 
-        this.activity_function = activation;
+        this.activation_function = activation;
 
         init(input_width, input_height, input_height * input_width * channels);
     }
@@ -49,7 +49,7 @@ public class Conv2D extends Layer{
         this.filters = filters;
         this.step = step;
 
-        this.activity_function = activation;
+        this.activation_function = activation;
 
     }
 
@@ -150,7 +150,7 @@ public class Conv2D extends Layer{
                 }
 
                 if(channels_j == channels-1)
-                    outputs[index] = activity_function.f( outputs[index] + bias[filters_i] );
+                    outputs[index] = activation_function.f( outputs[index] + bias[filters_i] );
             }//end channels
         }//end filters
 
@@ -196,7 +196,7 @@ public class Conv2D extends Layer{
 
                             int index = filters_dx + ih * output_width + iw;
 
-                            deltas[index] *= activity_function.f_derivative(outputs[index]);
+                            deltas[index] *= activation_function.f_derivative(outputs[index]);
                             w_delta[w_index_dx + dxchannel] += deltas[index];
 
                             for (int j = 0; j < w[filters_i][channels_j].length; j++) {
@@ -267,7 +267,7 @@ public class Conv2D extends Layer{
 		pw.println(SaveData.sInt("channel", channels));
 		pw.println(SaveData.sInt("filters", filters));
 
-        pw.println(SaveData.sInt("Act_Function_ID", activity_function.id));
+        pw.println(SaveData.sInt("Act_Function_ID", activation_function.id));
         pw.println(SaveData.sFloatArrays("bias", bias));
 		for(int i = 0; i < filters; i++)
 		   for(int j = 0; j < channels; j++){
@@ -293,7 +293,7 @@ public class Conv2D extends Layer{
 		filters = SaveData.getSInt(in.readLine());
 		
 
-        activity_function = Function.getFunctionById( SaveData.getSInt(in.readLine()) );
+        activation_function = Function.getFunctionById( SaveData.getSInt(in.readLine()) );
 
         bias = SaveData.getsFloatArrays(in.readLine());
 
@@ -318,7 +318,7 @@ public class Conv2D extends Layer{
                 ", w=" + Arrays.toString(w) +
                 ", bias=" + Arrays.toString(bias) +
                 ", startConvIndex=" + Arrays.toString(startConvIndex) +
-                ", Act_Function=" + activity_function +
+                ", Act_Function=" + activation_function +
                 ", one_channel_dimension=" + one_channel_dimension +
                 ", one_filter_wn=" + one_filter_wn +
                 ", wn=" + wn +

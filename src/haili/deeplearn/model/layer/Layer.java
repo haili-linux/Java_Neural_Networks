@@ -8,7 +8,6 @@ import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,7 +23,7 @@ public class Layer implements LayerInterface{
     public int output_dimension = 0;
     public int output_width = 0, output_height = 0;
 
-    public Function activity_function = new Function();
+    public Function activation_function = new Function();
 
     protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
 
@@ -62,6 +61,10 @@ public class Layer implements LayerInterface{
 
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer) {
         this.deltaOptimizer = deltaOptimizer;
+    }
+
+    public void setActivation_Function(Function activation){
+        this.activation_function = activation;
     }
 
     public void initByFile(BufferedReader in) throws Exception{

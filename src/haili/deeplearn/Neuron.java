@@ -42,22 +42,22 @@ public class Neuron implements Cloneable,Serializable
 		//data_list = new float[input_n];
 	}
 
-	public Neuron(int input_dimension, Function act_function){
+	public Neuron(int input_dimension, Function activation){
 		this.input_dimension = input_dimension;
 		w = new float[input_dimension];
 		b = /*(act_function.id==3) ? -0.8:*/ (float) Math.random()*2-1;
 		init();
-		ACT_function = act_function;
+		ACT_function = activation;
 		//data_list = new float[input_n];
 	}
 
 	//指定输入维度和偏置值
-	public Neuron(int input_dimension, float b, Function act_funtion){
+	public Neuron(int input_dimension, float b, Function activation){
 		this.input_dimension = input_dimension;
 		w = new float[input_dimension];
 		this.b = b;
 		init();
-		ACT_function = act_funtion;
+		ACT_function = activation;
 		//data_list = new float[input_n];
 	}
 

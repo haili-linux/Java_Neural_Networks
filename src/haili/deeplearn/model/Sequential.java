@@ -78,7 +78,7 @@ public class Sequential extends Layer{
 
         //是全连接层
         if(layer.id == new Dense(1, new Function()).id) {
-            if (layer.activity_function.id == new Softmax().id)//激活函数是softmax
+            if (layer.activation_function.id == new Softmax().id)//激活函数是softmax
                 layers.add(new SoftmaxLayer(layer.output_dimension));
         }
 
@@ -535,7 +535,7 @@ public class Sequential extends Layer{
                 ", output_dimension=" + output_dimension +
                 ", output_width=" + output_width +
                 ", output_height=" + output_height +
-                ", activity_function=" + activity_function +
+                ", activity_function=" + activation_function +
                 ", deltaOptimizer=" + deltaOptimizer +
                 '}';
     }

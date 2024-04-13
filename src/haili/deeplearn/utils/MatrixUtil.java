@@ -80,4 +80,18 @@ public class MatrixUtil {
         }
         return vector;
     }
+    public static float[] removePositionEncoder(int position, float[] vector, int value0){
+        for(int i = 0; i < vector.length; i++){
+
+            double v0 = (double) (2 * i) / vector.length;
+            double v1 = Math.pow(value0, v0);
+            double v2 = position / v1;
+
+            if(i % 2 == 0)
+                vector[i] -= (float) Math.sin(v2);
+            else
+                vector[i] -= (float) Math.cos(v2);
+        }
+        return vector;
+    }
 }

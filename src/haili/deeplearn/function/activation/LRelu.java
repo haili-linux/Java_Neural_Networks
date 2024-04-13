@@ -21,4 +21,8 @@ public class LRelu extends Function {
         return (x>0) ? 1 : 0.001f;
     }
 
+    @Override
+    public String toString() {
+        return super.toString() + "LRelu";
+    }
 }

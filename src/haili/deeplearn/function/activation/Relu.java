@@ -26,6 +26,10 @@ public class Relu extends Function
 		return (x>0) ? 1:0;
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + "Relu";
+	}
 
 }
 

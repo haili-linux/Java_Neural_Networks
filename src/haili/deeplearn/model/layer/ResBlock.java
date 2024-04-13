@@ -38,11 +38,11 @@ public class ResBlock extends Layer{
             this.output_dimension = layer.output_dimension;
         } else {
             Layer output_layer = layers.get(layers.size() - 1);
-            output_layer.activity_function = Function.getFunctionById(this.activity_function.id);
+            output_layer.activation_function = Function.getFunctionById(this.activation_function.id);
         }
 
-        this.activity_function = Function.getFunctionById(layer.activity_function.id);
-        layer.activity_function = new Function();
+        this.activation_function = Function.getFunctionById(layer.activation_function.id);
+        layer.activation_function = new Function();
         layers.add(layer);
     }
 
@@ -133,7 +133,7 @@ public class ResBlock extends Layer{
             //残差连接方式0: 相加
             float[] resDeltas = new float[output.length];
             for(int i = 0; i < output.length; i++) {
-                deltas[i] *= activity_function.f_derivative(output[i]);
+                deltas[i] *= activation_function.f_derivative(output[i]);
                 resDeltas[i] = deltas[i];
             }
 
@@ -174,7 +174,7 @@ public class ResBlock extends Layer{
                 int var0 = output_list.size() - 1;
                 float[] out_last = output_list.get(var0);
                 for (int i = 0; i < deltas_lastLayer.length; i++) {
-                    deltas_lastLayer[i] = deltas[i] * activity_function.f_derivative(output[i]);
+                    deltas_lastLayer[i] = deltas[i] * activation_function.f_derivative(output[i]);
                     out_lastLayer[i] = out_last[i];
                 }
 
@@ -220,11 +220,11 @@ public class ResBlock extends Layer{
                 out = MatrixUtil.add(out, inputs);
 
                 for(int i = 0; i < out.length; i++)
-                    out[i] = activity_function.f(out[i]);
+                    out[i] = activation_function.f(out[i]);
             }
         } else if(ResConnectType == ResConnectType_Concat){
             for(int i = 0; i < out.length; i++)
-                out[i] = activity_function.f(out[i]);
+                out[i] = activation_function.f(out[i]);
             //残差连接方式1: 拼接 out = { out0, out1, out2, ..., outN, input0, intput1, ..., inputN}
             out = MatrixUtil.combine(out, inputs);
         }
@@ -335,7 +335,7 @@ public class ResBlock extends Layer{
                 ", output_dimension=" + output_dimension +
                 ", output_width=" + output_width +
                 ", output_height=" + output_height +
-                ", activity_function=" + activity_function +
+                ", activity_function=" + activation_function +
                 ", deltaOptimizer=" + deltaOptimizer +
                 '}';
     }

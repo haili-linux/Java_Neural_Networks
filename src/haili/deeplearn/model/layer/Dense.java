@@ -14,12 +14,12 @@ import java.io.PrintWriter;
 public class Dense extends Layer{
 
     public Neuron[] neurons;
-
+    public boolean use_bias = true;
     //public Function activity_function;
 
     public Dense(int input_Dimension, int output_Dimension, Function activation){
         id = 1;
-        this.activity_function = activation;
+        this.activation_function = activation;
         this.output_dimension = output_Dimension;
         init(-1, -1, input_Dimension);
     }
@@ -28,7 +28,7 @@ public class Dense extends Layer{
     public Dense(int output_Dimension, Function activation){
         id = 1;
         this.output_dimension = output_Dimension;
-        this.activity_function = activation;
+        this.activation_function = activation;
         //neurons = new Neuron[output_Dimension];
     }
 
@@ -37,20 +37,21 @@ public class Dense extends Layer{
         this.output_width = output_width;
         this.output_height = output_height;
         id = 1;
-        this.activity_function = activation;
+        this.activation_function = activation;
         this.output_dimension = output_dimension;
         init(input_width, input_height, this.input_dimension);
     }
 
-//    public Dense(int output_width, int output_height, Function activation){
-//        this.input_dimension = input_width * input_height;
-//        this.output_width = output_width;
-//        this.output_height = output_height;
-//        id = 1;
-//        this.activity_function = activation;
-//        this.output_dimension = output_width * output_height;
-//        init(-1, -1, this.input_dimension);
-//    }
+    public Dense(int input_width, int input_height, int output_width, int output_height, int output_dimension , Function activation, boolean use_bias){
+        this.input_dimension = input_width * input_height;
+        this.output_width = output_width;
+        this.output_height = output_height;
+        id = 1;
+        this.activation_function = activation;
+        this.output_dimension = output_dimension;
+        this.use_bias = use_bias;
+        init(input_width, input_height, this.input_dimension);
+    }
 
     @Override
     public void init(int input_width, int input_height, int input_dimension){
@@ -66,7 +67,10 @@ public class Dense extends Layer{
         neurons = new Neuron[output_dimension];
 
         for (int i = 0; i < neurons.length; i++)
-            neurons[i] = new Neuron(input_dimension, activity_function);
+            if(this.use_bias)
+                neurons[i] = new Neuron(input_dimension, activation_function);
+            else
+                neurons[i] = new Neuron(input_dimension, 0f, activation_function);
     }
 
 
@@ -98,7 +102,9 @@ public class Dense extends Layer{
         for(int i = 0; i < neurons.length; i++){
 
             deltas[i] *= neurons[i].ACT_function.f_derivative(output[i]);
-            w_b_deltas[index] = deltas[i];
+
+            if(use_bias)
+                w_b_deltas[index] = deltas[i];  //delta_bias
             index++;
 
             for(int j = 0; j < neurons[i].w.length; j++) {
@@ -140,6 +146,13 @@ public class Dense extends Layer{
         super.setDeltaOptimizer(deltaOptimizer);
     }
 
+    @Override
+    public void setActivation_Function(Function activation) {
+        super.setActivation_Function(activation);
+        for (int i = 0; i < neurons.length; i++)
+            neurons[i].ACT_function = activation_function;
+    }
+
     int WeightNumber = -1;
     @Override
     public int getWeightNumber() {
@@ -155,6 +168,10 @@ public class Dense extends Layer{
         pw.println(SaveData.sInt("input_dimension", input_dimension));
         pw.println(SaveData.sInt("output_dimension", output_dimension));
 
+        int use_bias_int = 0;
+        if(use_bias) use_bias_int = 1;
+        pw.println(SaveData.sInt("use_bias", use_bias_int));
+
         for(int i = 0; i < neurons.length; i++){
             pw.println(SaveData.sInt("neurons[" + i + "].Act_Function_ID", neurons[i].ACT_function.id));
             pw.println(SaveData.sFloat("neurons[" + i + "].bias", neurons[i].b));
@@ -169,6 +186,9 @@ public class Dense extends Layer{
 
         input_dimension = SaveData.getSInt(in.readLine());
         output_dimension = SaveData.getSInt(in.readLine());
+
+        int use_bias_int = SaveData.getSInt(in.readLine());
+        if(use_bias_int == 0) this.use_bias = false;
 
         neurons = new Neuron[output_dimension];
         for(int i = 0; i < output_dimension; i++){
@@ -190,7 +210,7 @@ public class Dense extends Layer{
     @Override
     public String toString() {
         return "Dense{" +
-                "activation=" + activity_function +
+                "activation=" + activation_function +
                 ", input_dimension=" + input_dimension +
                 ", input_width=" + input_width +
                 ", input_height=" + input_height +

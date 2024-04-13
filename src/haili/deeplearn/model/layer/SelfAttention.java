@@ -9,12 +9,14 @@ import haili.deeplearn.utils.SaveData;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 
+import static java.lang.Float.NaN;
+
 
 public class SelfAttention extends Layer{
 
 
-    Dense q_layer, k_layer, v_layer;
-    Layer scoreLayer = new SoftmaxLayer();
+    public Dense q_layer, k_layer, v_layer;
+    public Layer scoreLayer = new SoftmaxLayer();
 
     /**
      * @param one_input_vector_dimension 一个单位输入向量的维度
@@ -27,9 +29,9 @@ public class SelfAttention extends Layer{
         this.output_width = one_output_vector_dimension;
         this.output_dimension = one_output_vector_dimension;
 
-        q_layer = new Dense(one_input_vector_dimension, Q_K_dimension, new Function());
-        k_layer = new Dense(one_input_vector_dimension, Q_K_dimension, new Function());
-        v_layer = new Dense(one_input_vector_dimension, one_output_vector_dimension, new Function());
+        q_layer = new Dense(one_input_vector_dimension,1, Q_K_dimension,1, Q_K_dimension, new Function(), false);
+        k_layer = new Dense(one_input_vector_dimension, 1, Q_K_dimension, 1, Q_K_dimension, new Function(), false);
+        v_layer = new Dense(one_input_vector_dimension, 1, one_output_vector_dimension, 1, one_output_vector_dimension, new Function(), false);
 
         init(0, 0, 0);
     }
@@ -145,7 +147,6 @@ public class SelfAttention extends Layer{
                     v_deltas[ij][ik] += score[i][ij] * deltas[od + ik] / sqrt_d;
                 }
             }
-
 
             score_deltas[i] = scoreLayer.backward(null, score[i],  score_deltas[i])[0];
 

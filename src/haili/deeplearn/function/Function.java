@@ -16,7 +16,9 @@ public class Function
 	public String SourceCode_derivative_Name;
     public float f(float x){ return x; }
 	public float f(float x1,float x2){return 0;}
-	public float f_derivative(float x){ return 1; }
+
+	public float f_derivative(float out){ return 1; }
+
 	public float f_derivative(float x1, float x2){ return 0; }
 
 	public static Function getFunctionById(int id){
@@ -34,6 +36,11 @@ public class Function
 			default:r = new Function(); break;
 		}
 		return r;
+	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "BaseFunction ";
 	}
 
 }
