@@ -8,7 +8,8 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 
 public class FilterResponseNormalization extends Layer{
-    public float[] w, b;
+    public float[][] w, b;
+    public int channel = 1;
 
     public FilterResponseNormalization(int input_dimension){
         this.id = 8;
@@ -19,9 +20,14 @@ public class FilterResponseNormalization extends Layer{
         this.input_dimension = input_dimension;
         this.output_dimension = input_dimension;
 
-        this.w = new float[input_dimension];
-        this.b = new float[input_dimension];
-        Arrays.fill(w, 1.0f);
+        this.w = new float[channel][input_dimension];
+        this.b = new float[channel][input_dimension];
+        Arrays.fill(w[0], 1.0f);
+    }
+
+    public FilterResponseNormalization(int input_width, int input_height, int input_Dimension){
+        this.id = 8;
+        init(input_width, input_height, input_Dimension);
     }
 
     public FilterResponseNormalization(){
@@ -37,71 +43,92 @@ public class FilterResponseNormalization extends Layer{
         this.input_dimension = input_Dimension;
         this.output_dimension = input_Dimension;
 
-        this.w = new float[input_dimension];
-        this.b = new float[input_dimension];
-        Arrays.fill(w, 1.0f);
+        int channel_dimension = input_width * input_height;
+        this.channel = input_Dimension / channel_dimension;
+
+        this.w = new float[channel][channel_dimension];
+        this.b = new float[channel][channel_dimension];
+        for(int i = 0 ; i < channel; i++)
+            Arrays.fill(w[i], 1.0f);
     }
 
     // output max: input_dimension
-    public float[][] forward_list(float[] inputs) {
+    public Object[] forward_list(float[] inputs) {
         float[] outputs = new float[output_dimension];
 
-        float v2 = 0;
-        for(int i = 0; i < input_dimension; i++){
-            v2 += inputs[i] * inputs[i];
+        int dimension_channel = input_width * input_height;
+        float[] v2 = new float[channel];
+        float[] v = new float[channel];
+        float[][] x_ = new float[channel][];
+
+        for(int ci = 0; ci < channel; ci++) {
+            int d_c = ci * dimension_channel;
+
+            for (int i = 0; i < dimension_channel; i++) {
+                int index = d_c + i;
+                v2[ci] += inputs[index] * inputs[index];
+            }
+            v2[ci] = v2[ci] / dimension_channel + 1e-6f;
+
+            v[ci] = (float) Math.sqrt(v2[ci]);
+
+            x_[ci] = new float[dimension_channel];
+            for (int i = 0; i < dimension_channel; i++) {
+                int index = d_c + i;
+                x_[ci][i] = inputs[index] / v[ci];
+                outputs[index] = w[ci][i] * x_[ci][i] + b[ci][i];
+            }
         }
-        v2 = v2 / input_dimension + 1e-6f;
 
-        float v = (float) Math.sqrt(v2);
-
-        float[] x_ = new float[input_dimension];
-        for (int i = 0; i < input_dimension; i++) {
-            x_[i] = inputs[i] / v;
-            outputs[i] = w[i] * x_[i] + b[i];
-        }
-
-        return new float[][]{outputs, new float[]{v, v2}, x_};
+        return new Object[]{outputs, v, v2, x_};
     }
 
 
     @Override
     public float[] forward(float[] inputs) {
-        return forward_list(inputs)[0];
+        return (float[]) forward_list(inputs)[0];
     }
 
 
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        float[][] outputsList = forward_list(inputs);
-        float[] ol2 = outputsList[1];
-        float v = ol2[0];
-        float v2 = ol2[1];
-        float[] x_ = outputsList[2];
+        Object[] outputsList = forward_list(inputs);
+        float[] v_list = (float[]) outputsList[1];
+        float[] v2_list = (float[]) outputsList[2];
+        float[][] x_list =  (float[][]) outputsList[3];
 
-        int m = input_dimension;
-
-        float var0 = (float) Math.pow(v2, -1.5);
-
-        float[] DL_dX_ = new float[m];
-        float DL_Dv2 = 0;
-        for(int i = 0; i < m; i++) {
-            DL_dX_[i] = deltas[i] * w[i];
-            DL_Dv2 += DL_dX_[i] * inputs[i];
-        }
-        DL_Dv2 *= - var0 / m;
-
-
+        int m = input_width * input_height;
         float[] w_b_deltas = new float[input_dimension * 2];
         float[] last_deltas = new float[input_dimension];
 
-        for(int i = 0; i < m; i++) {
-            w_b_deltas[i] = deltas[i] * x_[i];          //dw  检验通过
-            w_b_deltas[input_dimension + i] = deltas[i];
+        for(int ci = 0; ci < channel; ci++) {
+            int d_c = ci * m;
 
-            last_deltas[i] = DL_dX_[i] / v + DL_Dv2 * inputs[i];
+            float v = v_list[ci];
+            float v2 = v2_list[ci];
+            float[] x_ = x_list[ci];
+
+            float var0 = (float) Math.pow(v2, -1.5);
+
+            float[] DL_dX_ = new float[m];
+            float DL_Dv2 = 0;
+            for (int i = 0; i < m; i++) {
+                int index = d_c + i;
+                DL_dX_[i] = deltas[index] * w[ci][i];
+                DL_Dv2 += DL_dX_[i] * inputs[index];
+            }
+            DL_Dv2 *= -var0 / m;
+
+            for (int i = 0; i < m; i++) {
+                int index = d_c + i;
+                int index2 = d_c * 2 + i;
+                w_b_deltas[index2] = deltas[index] * x_[i];          //dw  检验通过
+                w_b_deltas[index2 + m] = deltas[index];
+
+                last_deltas[index] = DL_dX_[i] / v + DL_Dv2 * inputs[index];
+            }
         }
-
 
         return new float[][]{last_deltas, w_b_deltas};
     }
@@ -109,11 +136,16 @@ public class FilterResponseNormalization extends Layer{
 
     @Override
     public void upgradeWeight(float[] weightDeltas) {
-        for(int i = 0; i < input_dimension * 2; i++){
-            if(i < input_dimension)
-                w[i] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[i], i);
-            else
-                b[i - input_dimension] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[i], i);
+        int m = input_width * input_height;
+        for (int ci = 0; ci < channel; ci++) {
+            int dc = m * ci * 2;
+            for (int i = 0; i < m * 2; i++) {
+                int index = dc + i;
+                if (i < m)
+                    w[ci][i] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
+                else
+                    b[ci][i - m] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
+            }
         }
     }
 
@@ -141,8 +173,10 @@ public class FilterResponseNormalization extends Layer{
         pw.println(SaveData.sInt("output_width", output_width));
         pw.println(SaveData.sInt("output_height", output_height));
 
-        pw.println(SaveData.sFloatArrays("w", w));
-        pw.println(SaveData.sFloatArrays("bias", b));
+        for(float[] wi : w)
+            pw.println(SaveData.sFloatArrays("w", wi));
+        for(float[] bi : b)
+            pw.println(SaveData.sFloatArrays("bias", bi));
     }
 
     @Override
@@ -155,7 +189,14 @@ public class FilterResponseNormalization extends Layer{
         output_width = SaveData.getSInt(in.readLine());
         output_height = SaveData.getSInt(in.readLine());
 
-        w = SaveData.getsFloatArrays(in.readLine());
-        b = SaveData.getsFloatArrays(in.readLine());
+        channel = input_dimension / (input_width * input_height);
+
+        w = new float[channel][];
+        for(int i = 0; i < channel; i++)
+            w[i] = SaveData.getsFloatArrays(in.readLine());
+
+        b = new float[channel][];
+        for(int i = 0; i < channel; i++)
+            b[i] = SaveData.getsFloatArrays(in.readLine());
     }
 }
