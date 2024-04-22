@@ -17,6 +17,7 @@ public class Conv2DTranspose extends Layer{
     public float[][][] w;
     public float[][] bias;
 
+
     public Conv2DTranspose(int kernel_width, int kernel_height, int filters, int step, Function activation){
         this.id = 6;
         this.kernel_height = kernel_height;
@@ -24,6 +25,16 @@ public class Conv2DTranspose extends Layer{
         this.step = step;
         this.filters = filters;
         this.activation_function = activation;
+    }
+
+    public Conv2DTranspose(int kernel_width, int kernel_height, int filters, int step, Function activation, boolean use_bias){
+        this.id = 6;
+        this.kernel_height = kernel_height;
+        this.kernel_width = kernel_width;
+        this.step = step;
+        this.filters = filters;
+        this.activation_function = activation;
+        this.use_bias = use_bias;
     }
 
     public Conv2DTranspose(int input_width, int input_height, int kernel_width, int kernel_height, int filters, int channels, int step, Function activation){
@@ -36,6 +47,20 @@ public class Conv2DTranspose extends Layer{
         this.activation_function = activation;
         init(input_width, input_height, input_dimension);
     }
+
+    public Conv2DTranspose(int input_width, int input_height, int kernel_width, int kernel_height, int filters, int channels, int step, Function activation, boolean use_bias){
+        this.id = 6;
+        this.kernel_height = kernel_height;
+        this.kernel_width = kernel_width;
+        this.step = step;
+        this.filters = filters;
+        input_dimension = input_width * input_height * channels;
+        this.activation_function = activation;
+        init(input_width, input_height, input_dimension);
+        this.use_bias = use_bias;
+    }
+
+
 
     @Override
     public void init(int input_width, int input_height, int input_dimension) {
@@ -141,7 +166,8 @@ public class Conv2DTranspose extends Layer{
         int bias_index_d = filters * var0;
         for(int i = 0; i < output.length; i++){
             deltas[i] *= activation_function.f_derivative(output[i]);
-            w_deltas[i + bias_index_d] += deltas[i]; //bias 梯度
+            if(use_bias)
+                w_deltas[i + bias_index_d] += deltas[i]; //bias 梯度
         }
 
         float[] inputs_deltas = new float[input_dimension];
@@ -229,6 +255,10 @@ public class Conv2DTranspose extends Layer{
         pw.println(SaveData.sInt("channel", channels));
         pw.println(SaveData.sInt("filters", filters));
 
+        int ub = 1;
+        if(!use_bias) ub = 0;
+        pw.println(SaveData.sInt("use_bias", ub));
+
         pw.println(SaveData.sInt("Act_Function_ID", activation_function.id));
 
         //pw.println(SaveData.sFloatArrays("bias", bias));
@@ -261,6 +291,9 @@ public class Conv2DTranspose extends Layer{
         channels = SaveData.getSInt(in.readLine());
         filters = SaveData.getSInt(in.readLine());
 
+        int ub =  SaveData.getSInt(in.readLine());
+        if(ub == 0)
+            this.use_bias = false;
 
         activation_function = Function.getFunctionById( SaveData.getSInt(in.readLine()) );
 

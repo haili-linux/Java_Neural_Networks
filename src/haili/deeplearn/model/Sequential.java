@@ -186,45 +186,53 @@ public class Sequential extends Layer{
         if(SaveHiddenLayerOutput)
             setSaveHiddenLayerOutput(SaveHiddenLayerOutput);
 
-        // bach中每个的梯度
-        float[][][] deltas = new float[train_X.length][][];
-        ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(train_X.length) {
-            @Override
-            public void working(int index) {
-                deltas[index] = backward(train_X[index], train_Y[index]);
-
-            }
-        };
-        ThreadWork.start(threadWorker, threadNumber);
-
-        // 求bach中的梯度均值
-        for (int i = 0; i < deltas[0].length; i++) {
-
-            if (deltas[0][i] == null) continue;
-
-            int n = deltas[0][i].length;
-            final int layerIndex = i;
-            ThreadWork.ThreadWorker threadWorker2 = new ThreadWork.ThreadWorker(n) {
+        float[][] deltas_layer;
+        if(train_X.length > 1 && threadNumber > 1) {
+            // bach中每个的梯度
+            float[][][] deltas = new float[train_X.length][][];
+            ThreadWork.ThreadWorker threadWorker = new ThreadWork.ThreadWorker(train_X.length) {
                 @Override
                 public void working(int index) {
-                    for (int i = 0; i < deltas.length; i++) {
-                        deltas[0][layerIndex][index] += deltas[i][layerIndex][index];
-                    }
-                    deltas[0][layerIndex][index] /= deltas.length;
+                    deltas[index] = backward(train_X[index], train_Y[index]);
+
                 }
             };
+            ThreadWork.start(threadWorker, threadNumber);
 
-            threadWorker2.setStart_index(1);
-            ThreadWork.start(threadWorker2, threadNumber);
+            // 求bach的梯度均值
+            for (int i = 0; i < deltas[0].length; i++) {
+
+                if (deltas[0][i] == null) continue;
+
+                int n = deltas[0][i].length;
+                final int layerIndex = i;
+                ThreadWork.ThreadWorker threadWorker2 = new ThreadWork.ThreadWorker(n) {
+                    @Override
+                    public void working(int index) {
+                        for (int i = 0; i < deltas.length; i++) {
+                            deltas[0][layerIndex][index] += deltas[i][layerIndex][index];
+                        }
+                        deltas[0][layerIndex][index] /= deltas.length;
+                    }
+                };
+
+                threadWorker2.setStart_index(1);
+                ThreadWork.start(threadWorker2, threadNumber);
+            }
+
+            deltas_layer = deltas[0];
+
+        } else {
+            deltas_layer = backward(train_X[0], train_Y[0]);
         }
 
-        if(SaveHiddenLayerOutput) {
+        if (SaveHiddenLayerOutput) {
             // 清楚中间变量缓存
             setSaveHiddenLayerOutput(false);
             clearHiddenLayerOutput();
         }
 
-        return deltas[0];
+        return deltas_layer;
     }
 
     private void upgradeBatch(float[][] train_X, float[][] train_Y, int threadNumber){
@@ -295,10 +303,8 @@ public class Sequential extends Layer{
      * @param w_deltas gradient()返回的梯度
      */
     public void upgradeWeight(float[][] w_deltas){
-        for(int i = layers.size()-1; i > 0; i--) {
-            //System.out.println("layer: " + i);
+        for(int i = layers.size()-1; i >= 0; i--)
             layers.get(i).upgradeWeight(w_deltas[i]);
-        }
     }
 
     //测试一个数据集上的误差

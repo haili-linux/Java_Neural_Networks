@@ -23,7 +23,6 @@ public class Conv2D extends Layer{
 
     public int[] startConvIndex;
 
-    //Function activity_function;
 
     public Conv2D(int input_width, int input_height, int kernel_width, int kernel_height, int filters, int channels, int step, Function activation){
         id = 2;
@@ -39,6 +38,21 @@ public class Conv2D extends Layer{
         init(input_width, input_height, input_height * input_width * channels);
     }
 
+    public Conv2D(int input_width, int input_height, int kernel_width, int kernel_height, int filters, int channels, int step, Function activation, boolean use_bias){
+        id = 2;
+
+        this.kernel_width = kernel_width;
+        this.kernel_height = kernel_height;
+        this.filters = filters;
+        this.channels = channels;
+        this.step = step;
+
+        this.activation_function = activation;
+        this.use_bias = use_bias;
+
+        init(input_width, input_height, input_height * input_width * channels);
+    }
+
 
     // use in Sequential
     public Conv2D(int kernel_width, int kernel_height, int filters, int step, Function activation) {
@@ -50,6 +64,19 @@ public class Conv2D extends Layer{
         this.step = step;
 
         this.activation_function = activation;
+
+    }
+
+    public Conv2D(int kernel_width, int kernel_height, int filters, int step, Function activation, boolean use_bias) {
+        id = 2;
+
+        this.kernel_width = kernel_width;
+        this.kernel_height = kernel_height;
+        this.filters = filters;
+        this.step = step;
+
+        this.activation_function = activation;
+        this.use_bias = use_bias;
 
     }
 
@@ -197,7 +224,9 @@ public class Conv2D extends Layer{
                             int index = filters_dx + ih * output_width + iw;
 
                             deltas[index] *= activation_function.f_derivative(outputs[index]);
-                            w_delta[w_index_dx + dxchannel] += deltas[index];
+
+                            if(use_bias)
+                                w_delta[w_index_dx + dxchannel] += deltas[index];
 
                             for (int j = 0; j < w[filters_i][channels_j].length; j++) {
                                 float delta = deltas[index] * inputs[k_index[j]];
@@ -267,6 +296,10 @@ public class Conv2D extends Layer{
 		pw.println(SaveData.sInt("channel", channels));
 		pw.println(SaveData.sInt("filters", filters));
 
+        int ub = 1;
+        if(!use_bias) ub = 0;
+        pw.println(SaveData.sInt("use_bias", ub));
+
         pw.println(SaveData.sInt("Act_Function_ID", activation_function.id));
         pw.println(SaveData.sFloatArrays("bias", bias));
 		for(int i = 0; i < filters; i++)
@@ -291,7 +324,10 @@ public class Conv2D extends Layer{
         step = SaveData.getSInt(in.readLine());
 		channels = SaveData.getSInt(in.readLine());
 		filters = SaveData.getSInt(in.readLine());
-		
+
+        int ub =  SaveData.getSInt(in.readLine());
+        if(ub == 0)
+            this.use_bias = false;
 
         activation_function = Function.getFunctionById( SaveData.getSInt(in.readLine()) );
 

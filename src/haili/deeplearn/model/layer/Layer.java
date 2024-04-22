@@ -25,6 +25,8 @@ public class Layer implements LayerInterface{
 
     public Function activation_function = new Function();
 
+    public boolean use_bias = true;
+
     protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
 
     //是否保存中间变量
@@ -96,6 +98,8 @@ public class Layer implements LayerInterface{
             case 5: layer = new ResBlock(ResBlock.ResConnectType_Add); break;
             case 6: layer = new Conv2DTranspose(1,1,1,1, new Function()); break;
             case 7: layer = new SelfAttention(1,1,1); break;
+            case 8: layer = new FilterResponseNormalization(1); break;
+            case 9: layer = new ActivationLayer(1, new Function()); break;
             default: layer = new Layer(); break;
         }
         return layer;

@@ -94,4 +94,19 @@ public class MatrixUtil {
         }
         return vector;
     }
+
+    public static String ToString(float[] x, int h, int w){
+        if( x == null || x.length == 0)
+            return "[]";
+
+        StringBuilder r = new StringBuilder("[" + x[0] + ", ");
+        for (int i = 1; i < x.length - 1; i++){
+            if((i+1)%w == 0)
+                 r.append(x[i]).append("]\n[");
+             else
+                 r.append(x[i]).append(", ");
+        }
+        r.append(x[x.length - 1]).append("]");
+        return r.toString();
+    }
 }

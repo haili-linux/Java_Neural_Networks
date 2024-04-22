@@ -14,8 +14,6 @@ import java.io.PrintWriter;
 public class Dense extends Layer{
 
     public Neuron[] neurons;
-    public boolean use_bias = true;
-    //public Function activity_function;
 
     public Dense(int input_Dimension, int output_Dimension, Function activation){
         id = 1;
@@ -128,12 +126,12 @@ public class Dense extends Layer{
     public void upgradeWeight(float[] weightDeltas) {
         int index = 0;
 
-        for(int i = 0; i < neurons.length; i++){
-            neurons[i].b -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
+        for (Neuron neuron : neurons) {
+            neuron.b -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
             index++;
 
-            for(int j = 0; j < neurons[i].w.length; j++) {
-                neurons[i].setW(j, neurons[i].w[j] - learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index));
+            for (int j = 0; j < neuron.w.length; j++) {
+                neuron.setW(j, neuron.w[j] - learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index));
                 index++;
             }
         }
