@@ -52,8 +52,26 @@ public class FilterResponseNormalization extends Layer{
             Arrays.fill(w[i], 1.0f);
     }
 
+    public Object[] forward_list(float[] inputs){
+        Object[] output = null;
+        if(saveHiddenLayerOutput && hiddenLayerOutputMap.containsKey(inputs)) {
+            output = (Object[]) hiddenLayerOutputMap.get(inputs);
+            if(output != null)
+                return output;
+        }
+
+        //计算
+        output = forward_List(inputs);
+
+        // 保存中间输出
+        if(saveHiddenLayerOutput){
+            hiddenLayerOutputMap.put(inputs, output);
+        }
+        return output;
+    }
+
     // output max: input_dimension
-    public Object[] forward_list(float[] inputs) {
+    private Object[] forward_List(float[] inputs) {
         float[] outputs = new float[output_dimension];
 
         int dimension_channel = input_width * input_height;
