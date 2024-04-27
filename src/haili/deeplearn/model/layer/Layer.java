@@ -4,12 +4,13 @@ import haili.deeplearn.DeltaOptimizer.BaseOptimizer;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.function.Function;
 import haili.deeplearn.model.Sequential;
-import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class Layer implements LayerInterface{
 
@@ -17,17 +18,22 @@ public class Layer implements LayerInterface{
 
     public float learn_rate = 1e-4f;
 
-    public int input_dimension = 0;
-    public int input_width = 0, input_height = 0;
+    public int input_width = 1;
+    public int input_height = 1;
+    public int input_dimension = 1;
 
-    public int output_dimension = 0;
-    public int output_width = 0, output_height = 0;
+    public int output_width = 1;
+    public int output_height = 1;
+    public int output_dimension = 1;
 
     public Function activation_function = new Function();
+    protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
 
+    //使用偏置值bias
     public boolean use_bias = true;
 
-    protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
+    //部分层的forward需要区分train和eval
+    public boolean train = false;
 
     //是否保存中间变量
     public boolean saveHiddenLayerOutput = false;
@@ -36,11 +42,19 @@ public class Layer implements LayerInterface{
     public Map<float[], Object> hiddenLayerOutputMap = new HashMap<>();
 
     @Override
-    public void init(int input_width, int input_height, int input_Dimension) { }
+    public void init(int input_width, int input_height, int input_Dimension) {
+        this.input_width = input_width;
+        this.input_height = input_height;
+        this.input_dimension = input_Dimension;
+
+        this.output_width = input_width;
+        this.output_height = input_height;
+        this.output_dimension = input_Dimension;
+    }
 
     @Override
     public float[] forward(float[] inputs) {
-        return new float[0];
+        return inputs;
     }
 
     /**
@@ -52,7 +66,7 @@ public class Layer implements LayerInterface{
      */
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        return new float[0][];
+        return new float[][]{deltas, new float[0]};
     }
 
     @Override
@@ -60,6 +74,8 @@ public class Layer implements LayerInterface{
 
     //返回参数个数
     public int getWeightNumber(){ return 0; }
+
+    public int getWeightNumber_Train(){ return 0; }
 
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer) {
         this.deltaOptimizer = deltaOptimizer;
@@ -69,9 +85,7 @@ public class Layer implements LayerInterface{
         this.activation_function = activation;
     }
 
-    public void initByFile(BufferedReader in) throws Exception{
-
-    }
+    public void initByFile(BufferedReader in) throws Exception{ }
 
     public void saveInFile(PrintWriter pw) throws Exception{ }
 
@@ -83,14 +97,29 @@ public class Layer implements LayerInterface{
         this.saveHiddenLayerOutput = b;
     }
 
+    public void setTrain(boolean train){
+        this.train = train;
+    }
+
     public void clearHiddenLayerOutput(){
         this.hiddenLayerOutputMap.clear();
     }
 
-    public final static Layer getLayerById(int id){
+    //生成gauss分布数组，均值0，
+    public static float[] GaussRandomArrays(int length){
+        Random random = new Random();
+        float var0 = (float) Math.sqrt(length);
+        float[] array = new float[length];
+        for (int i = 0; i < length; i++)
+            array[i] = (float) random.nextGaussian() / var0;
+
+        return array;
+    }
+
+    public static Layer getLayerById(int id){
         Layer layer;
         switch (id){
-            case 0: layer = new Sequential(-1, -1, -1); break;
+            case 0: layer = new Sequential(1, 1, 1); break;
             case 1: layer = new Dense(1, new Function()); break;
             case 2: layer = new Conv2D(1,1,1,1, new Function()); break;
             case 3: layer = new Pooling2D(1,1); break;
@@ -100,9 +129,31 @@ public class Layer implements LayerInterface{
             case 7: layer = new SelfAttention(1,1,1); break;
             case 8: layer = new FilterResponseNormalization(1); break;
             case 9: layer = new ActivationLayer(1, new Function()); break;
+            case 10:layer = new Reshape(1,1,1); break;
+            case 11:layer = new Dropout(0.5); break;
             default: layer = new Layer(); break;
         }
         return layer;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder= new StringBuilder();
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        char[] c0 = new char[32 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "(" + output_width + ", " + output_height + ", " + output_dimension  + ")";
+
+        int v0 = 25 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+        int param = getWeightNumber_Train();
+
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        return stringBuilder.toString();
+    }
 }

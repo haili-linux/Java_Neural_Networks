@@ -1,17 +1,14 @@
 package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Function;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.Arrays;
 
 
 public class Conv2D extends Layer{
-
 
     int kernel_width, kernel_height, step;
 
@@ -99,7 +96,7 @@ public class Conv2D extends Layer{
         this.input_dimension = input_dimension;
 
         if(input_dimension % (input_width * input_height) != 0){
-            System.out.println(this.getClass().toString() + "  Error: input_dimension % (input_width * input_height) != 0" );
+            System.out.println(this.getClass() + "  Error: input_dimension % (input_width * input_height) != 0" );
             System.exit(0);
         }
 
@@ -109,7 +106,7 @@ public class Conv2D extends Layer{
 
         for(int i = 0; i < filters; i++)
             for(int j = 0; j < channels; j++) {
-                w[i][j] = new Neuron(kernel_width * kernel_height).w;
+                w[i][j] = GaussRandomArrays(kernel_width * kernel_height);
                 for (int k = 0; k < w[i][j].length; k++){
                     w[i][j][k] /= channels;
                 }
@@ -279,6 +276,14 @@ public class Conv2D extends Layer{
     }
 
     @Override
+    public int getWeightNumber_Train() {
+        if(use_bias)
+            return getWeightNumber();
+        else
+            return getWeightNumber() - filters;
+    }
+
+    @Override
     public void saveInFile(PrintWriter pw) throws Exception {
         pw.println(SaveData.sInt("Layer_ID", id));
 
@@ -343,29 +348,5 @@ public class Conv2D extends Layer{
         initStartConvIndex();
     }
 
-    @Override
-    public String toString() {
-        return "Conv2D{" +
-                "kernel_width=" + kernel_width +
-                ", kernel_height=" + kernel_height +
-                ", step=" + step +
-                ", filters=" + filters +
-                ", channels=" + channels +
-                ", w=" + Arrays.toString(w) +
-                ", bias=" + Arrays.toString(bias) +
-                ", startConvIndex=" + Arrays.toString(startConvIndex) +
-                ", Act_Function=" + activation_function +
-                ", one_channel_dimension=" + one_channel_dimension +
-                ", one_filter_wn=" + one_filter_wn +
-                ", wn=" + wn +
-                ", id=" + id +
-                ", learn_rate=" + learn_rate +
-                ", input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                '}';
-    }
+
 }

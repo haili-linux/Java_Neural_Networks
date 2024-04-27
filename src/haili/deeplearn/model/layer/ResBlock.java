@@ -260,6 +260,15 @@ public class ResBlock extends Layer{
     }
 
     @Override
+    public int getWeightNumber_Train() {
+        int number = 0;
+        for (Layer layer : layers)
+            number += layer.getWeightNumber_Train();
+
+        return number;
+    }
+
+    @Override
     public void setLearn_rate(float learn_rate){
         this.learn_rate = learn_rate;
         for (Layer layer: layers){
@@ -271,6 +280,14 @@ public class ResBlock extends Layer{
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer){
         for (Layer layer: layers){
             layer.setDeltaOptimizer(deltaOptimizer);
+        }
+    }
+
+    @Override
+    public void setTrain(boolean train) {
+        this.train = train;
+        for (Layer layer: layers){
+            layer.setTrain(this.train);
         }
     }
 
@@ -324,19 +341,32 @@ public class ResBlock extends Layer{
 
     @Override
     public String toString() {
-        return "ResBlock{" +
-                "ResConnectType=" + ResConnectType +
-                ", layers=" + layers +
-                ", id=" + id +
-                ", learn_rate=" + learn_rate +
-                ", input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                ", activity_function=" + activation_function +
-                ", deltaOptimizer=" + deltaOptimizer +
-                '}';
+        StringBuilder stringBuilder= new StringBuilder();
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        if(this.ResConnectType == ResConnectType_Add)
+            name += "-Add";
+        else
+            name += "-Concat";
+
+        char[] c0 = new char[32 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "(" + output_width + ", " + output_height + ", " + output_dimension + ")";
+
+        int v0 = 25 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+        int param = getWeightNumber_Train();
+
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+
+        for (Layer layer: layers){
+            stringBuilder.append("\n ").append(layer.toString());
+        }
+
+        return stringBuilder.toString();
     }
 }

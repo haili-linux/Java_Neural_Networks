@@ -109,4 +109,24 @@ public class MatrixUtil {
         r.append(x[x.length - 1]).append("]");
         return r.toString();
     }
+
+    public static String ArraysToString(float[] x, int w, int h){
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i = 1; i <= x.length; i++){
+            stringBuilder.append(x[i-1]).append(", ");
+            if(i % w == 0)
+                stringBuilder.append("\n");
+
+            if( i % (w * h) == 0)
+                stringBuilder.append("\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    public static float sum(float[] x){
+        float r = 0;
+        for(float xi : x)
+            r += xi;
+        return r;
+    }
 }

@@ -11,22 +11,16 @@ public class Neuron implements Cloneable,Serializable
 	// 单个神经元
 	public int input_dimension = 1;//输入变量数
 
-	//public float lastIn = 0;//上一次输入
-	//public float lastOut = 0;//上一次输出
-	//public float delta = 0; //权值的梯度
-	//public float[] w_old;//上一次权的值
 
 	public float[] w;//权值
-	public float b;//偏移量,阈值
+	public float b = 0;//偏移量,阈值
 
 	public Function ACT_function; // 激活函数
-	//public float[] data_list;//一个储存空间,和逻辑无关，灵活运用
-	//public float data = 0;//一个储存空间,和逻辑无关，灵活运用
-	
+
 	//默认输入维度为1
 	public Neuron(){
 		w = new float[input_dimension];
-		b = (float) Math.random()*2 - 1;//偏置值随机
+		//b = 0;//偏置值随机
 		init();
 		ACT_function = new Sigmoid();
 		//data_list = new float[input_n];
@@ -36,7 +30,7 @@ public class Neuron implements Cloneable,Serializable
     public Neuron(int input_dimension){
 		this.input_dimension = input_dimension;
 		w = new float[input_dimension];
-		b = (float) Math.random()*2 - 1;
+		//b = 0;
 		init();
 		ACT_function = new Sigmoid();
 		//data_list = new float[input_n];
@@ -45,7 +39,7 @@ public class Neuron implements Cloneable,Serializable
 	public Neuron(int input_dimension, Function activation){
 		this.input_dimension = input_dimension;
 		w = new float[input_dimension];
-		b = /*(act_function.id==3) ? -0.8:*/ (float) Math.random()*2-1;
+		//b = 0;
 		init();
 		ACT_function = activation;
 		//data_list = new float[input_n];
@@ -63,19 +57,13 @@ public class Neuron implements Cloneable,Serializable
 
 	//初始化
 	private void init(){
-		//w_old = w;
-		float a = 0;
-		for(int i=0;i<w.length;i++){
+		for(int i = 0; i < w.length; i++){
 			//初始权值随机
-			w[i] = (float) Math.random();
-			a += w[i];
+			w[i] = (float) (Math.random() - 1f) * 2;
 		}
-		for(int i=0;i<w.length;i++)
-			w[i] /= a;
 	}
    
-	public void setW(int n,float newW){
-		//w_old[n] = w[n];//同时修改w_old
+	public void setW(int n, float newW){
 		w[n] = newW;
 	}
 	
@@ -144,8 +132,6 @@ public class Neuron implements Cloneable,Serializable
 		if(de_number>0){
 			input_dimension -= de_number;
 			w = Arrays.copyOf(w, input_dimension);
-			//w_old = w;
-			//data_list = Arrays.copyOf(data_list,input_n);
 		}
 	}
 	
@@ -154,8 +140,6 @@ public class Neuron implements Cloneable,Serializable
 		if(n>0){
 		   input_dimension = n;
 	       w = arraysOpon(w,new float[n]);
-		   //w_old = w;
-		   //data_list = new float[n];
 	    }
 	}
 	

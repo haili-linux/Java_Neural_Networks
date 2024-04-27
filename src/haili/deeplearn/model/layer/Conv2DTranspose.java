@@ -1,12 +1,14 @@
 package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Function;
+import haili.deeplearn.function.activation.Tanh;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
+
 
 public class Conv2DTranspose extends Layer{
     int kernel_width, kernel_height, step;
@@ -15,7 +17,7 @@ public class Conv2DTranspose extends Layer{
     int channels;
 
     public float[][][] w;
-    public float[][] bias;
+    public float[] bias;
 
 
     public Conv2DTranspose(int kernel_width, int kernel_height, int filters, int step, Function activation){
@@ -69,18 +71,16 @@ public class Conv2DTranspose extends Layer{
         this.input_dimension = input_dimension;
 
         if(input_dimension % (input_width * input_height) != 0){
-            System.out.println(this.getClass().toString() + "  Error: input_dimension % (input_width * input_height) != 0" );
+            System.out.println(this.getClass() + "  Error: input_dimension % (input_width * input_height) != 0" );
             System.exit(0);
         }
-
-        //if()
 
         channels = input_dimension / (input_width * input_height);
         w = new float[filters][channels][];
 
         for(int i = 0; i < filters; i++)
             for(int j = 0; j < channels; j++) {
-                w[i][j] = new Neuron(kernel_width * kernel_height).w;
+                w[i][j] = GaussRandomArrays(kernel_width * kernel_height);
                 for (int k = 0; k < w[i][j].length; k++){
                     w[i][j][k] /= channels;
                 }
@@ -90,9 +90,9 @@ public class Conv2DTranspose extends Layer{
         output_height = step * input_height + kernel_height - step;
         this.output_dimension = output_width * output_height * filters;
 
-        bias = new float[filters][output_width * output_height];
+        bias = new float[filters];
 
-        wn = filters * channels * w[0][0].length + filters * bias[0].length;
+        wn = filters * channels * w[0][0].length + filters;
         startDeConvIndex = startDeConvIndexStart();
     }
 
@@ -130,10 +130,12 @@ public class Conv2DTranspose extends Layer{
             int[] convIndex = startDeConvIndex.clone();
             for(int input_point = 0; input_point < input_channel_dimension; input_point++){
                 int x_point = input_point % input_width;
-                //int y_point = input_point / input_width;
+
                 for(int channel_index = 0; channel_index < channels; channel_index++){
-                    for (int i = 0; i < convIndex.length; i++)
-                        output[convIndex[i] + out_filter_d] += w[filtes_i][channel_index][i] * inputs[input_point];
+                    for (int i = 0; i < convIndex.length; i++) {
+                        int inputs_d_channel_index = channel_index * input_channel_dimension;
+                        output[convIndex[i] + out_filter_d] += w[filtes_i][channel_index][i] * inputs[input_point + inputs_d_channel_index];
+                    }
                 }
 
                 if(x_point == input_width - 1){
@@ -148,8 +150,7 @@ public class Conv2DTranspose extends Layer{
 
         for(int i = 0; i < output.length; i++){
             int index_filter = i / (outDimension_filter);
-            int v1 = i % outDimension_filter;
-            output[i] += bias[index_filter][v1];
+            output[i] += bias[index_filter];
             output[i] = activation_function.f(output[i]);
         }
 
@@ -158,7 +159,6 @@ public class Conv2DTranspose extends Layer{
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        //w_deltas = { filter0:{ channel0: ( w1,..., wn ), channel1, ... }, ...., filterN }
         int outDimension_filter = output_width * output_height;
         int var0 =  channels * w[0][0].length;
         float[] w_deltas = new float[getWeightNumber()];
@@ -166,8 +166,10 @@ public class Conv2DTranspose extends Layer{
         int bias_index_d = filters * var0;
         for(int i = 0; i < output.length; i++){
             deltas[i] *= activation_function.f_derivative(output[i]);
-            if(use_bias)
-                w_deltas[i + bias_index_d] += deltas[i]; //bias 梯度
+            if(use_bias) {
+                int index_filter = i / (outDimension_filter);
+                w_deltas[bias_index_d + index_filter] += deltas[i];
+            }
         }
 
         float[] inputs_deltas = new float[input_dimension];
@@ -180,14 +182,14 @@ public class Conv2DTranspose extends Layer{
             int[] convIndex = startDeConvIndex.clone();
             for(int input_point = 0; input_point < input_channel_dimension; input_point++){
                 int x_point = input_point % input_width;
-                //int y_point = input_point / input_width;
+
                 for(int channel_index = 0; channel_index < channels; channel_index++){
                     for (int i = 0; i < convIndex.length; i++) {
                         int output_index = convIndex[i] + out_filter_d;
-                        //output[output_index] += w[filtes_i][channel_index][i] * inputs[input_point];
                         int w_deltas_index = w_deltas_filter_d + channel_index * convIndex.length + i;
-                        w_deltas[w_deltas_index] += deltas[output_index] * inputs[input_point];
-                        inputs_deltas[input_point] += deltas[output_index] * w[filter_i][channel_index][i];
+                        int inputs_d_channel_index = channel_index * input_channel_dimension + input_point;
+                        w_deltas[w_deltas_index] += deltas[output_index] * inputs[ inputs_d_channel_index];
+                        inputs_deltas[inputs_d_channel_index] += deltas[output_index] * w[filter_i][channel_index][i];
                     }
                 }
 
@@ -206,7 +208,6 @@ public class Conv2DTranspose extends Layer{
     @Override
     public void upgradeWeight(float[] weightDeltas) {
         int bias_index_d = filters * channels * w[0][0].length;
-        int outDimension_filter = output_width * output_height;
 
         //update w
         for (int i = 0; i < bias_index_d; i++){
@@ -218,9 +219,7 @@ public class Conv2DTranspose extends Layer{
 
         //update bias
         for(int i = bias_index_d; i < weightDeltas.length; i++){
-            int index_filter = (i -  bias_index_d) / outDimension_filter;
-            int v1 = (i - bias_index_d) % outDimension_filter;
-            bias[index_filter][v1] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[i], i);;
+            bias[i - bias_index_d] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[i], i);
         }
     }
 
@@ -228,6 +227,14 @@ public class Conv2DTranspose extends Layer{
     @Override
     public int getWeightNumber() {
         return wn;
+    }
+
+    @Override
+    public int getWeightNumber_Train() {
+        if(use_bias)
+            return getWeightNumber();
+        else
+            return getWeightNumber() - filters;
     }
 
     @Override
@@ -261,17 +268,13 @@ public class Conv2DTranspose extends Layer{
 
         pw.println(SaveData.sInt("Act_Function_ID", activation_function.id));
 
-        //pw.println(SaveData.sFloatArrays("bias", bias));
+        pw.println(SaveData.sFloatArrays("bias", bias));
 
         for(int i = 0; i < filters; i++) {
-            for (int j = 0; j < channels; j++) {
+            for (int j = 0; j < channels; j++)
                 pw.println(SaveData.sFloatArrays("w[" + i + "][" + j + "]", w[i][j]));
-            }
-
-            for (int j = 0; j < bias[i].length; j++){
-                pw.println(SaveData.sFloat("bias[" + i + "][" + j + "]", bias[i][j]));
-            }
         }
+
     }
 
     @Override
@@ -297,42 +300,16 @@ public class Conv2DTranspose extends Layer{
 
         activation_function = Function.getFunctionById( SaveData.getSInt(in.readLine()) );
 
-        bias = new float[filters][output_width * output_height];
+        bias = SaveData.getsFloatArrays(in.readLine());
 
         w = new float[filters][channels][];
         for(int i = 0; i < filters; i++) {
-            for (int j = 0; j < channels; j++) {
+            for (int j = 0; j < channels; j++)
                 w[i][j] = SaveData.getsFloatArrays(in.readLine());
-            }
-
-            for (int j = 0; j < output_width * output_height; j++){
-                bias[i][j] = SaveData.getSFloat(in.readLine());
-            }
         }
 
-        wn = filters * channels * w[0][0].length + filters * bias[0].length;
+        wn = filters * channels * w[0][0].length + filters;
         startDeConvIndex = startDeConvIndexStart();
     }
 
-    @Override
-    public String toString() {
-        return "Conv2DTranspose{" +
-                "kernel_width=" + kernel_width +
-                ", kernel_height=" + kernel_height +
-                ", step=" + step +
-                ", filters=" + filters +
-                ", channels=" + channels +
-                ", wn=" + wn +
-                ", id=" + id +
-                ", learn_rate=" + learn_rate +
-                ", input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                ", activity_function=" + activation_function +
-                ", deltaOptimizer=" + deltaOptimizer +
-                '}';
-    }
 }

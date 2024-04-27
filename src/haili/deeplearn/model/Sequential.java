@@ -3,10 +3,10 @@ package haili.deeplearn.model;
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.function.Function;
 import haili.deeplearn.function.activation.Softmax;
-import haili.deeplearn.function.loss.MSELoss;
 import haili.deeplearn.model.layer.Dense;
 import haili.deeplearn.model.layer.Layer;
-import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
+import haili.deeplearn.model.layer.SoftmaxLayer;
+import haili.deeplearn.model.loss.LossLayer;
 import haili.deeplearn.utils.DataSetUtils;
 import haili.deeplearn.utils.ProgressBarCmd;
 import haili.deeplearn.utils.SaveData;
@@ -21,14 +21,13 @@ public class Sequential extends Layer{
 
     public String EXPLAIN = "";
 
-    public Function Loss_Function = new MSELoss();
-
     public float loss = 0;
 
     private float learn_rate = 1e-4f;
 
     public ArrayList<Layer> layers = new ArrayList<>();
 
+    public LossLayer lossLayer = new LossLayer();
 
     public Sequential(int input_width, int input_height, int input_Dimension){
         id = 0;
@@ -37,7 +36,15 @@ public class Sequential extends Layer{
         this.input_dimension = input_Dimension;
     }
 
+    public Sequential(int input_Dimension){
+        id = 0;
+        this.input_width = input_Dimension;
+        this.input_height = 1;
+        this.input_dimension = input_Dimension;
+    }
+
     public Sequential(){ id = 0; }
+
 
     /**
      * 通过模型文件初始化
@@ -63,7 +70,7 @@ public class Sequential extends Layer{
         layer.learn_rate = learn_rate;
 
         //layer初始化
-        if(layer.input_dimension == 0 || layer.input_height == 0 || layer.input_width == 0){
+        if(layer.input_dimension == 1 || layer.input_height == 1 || layer.input_width == 1){
             if(layers.isEmpty()){
                 if( (input_width>0 && input_height>0) || input_dimension>0)
                     layer.init(input_width, input_height, input_dimension);
@@ -89,7 +96,7 @@ public class Sequential extends Layer{
 
   
     public void setLoss_Function(Function loss_Function){
-        this.Loss_Function = loss_Function;
+        this.lossLayer.loss_function = loss_Function;
     }
 
     @Override
@@ -106,22 +113,31 @@ public class Sequential extends Layer{
         }
     }
 
+    @Override
+    public void setTrain(boolean train) {
+        this.train = train;
+        for (Layer layer: layers){
+            layer.setTrain(this.train);
+        }
+    }
+
     /**
-     *  对模型进行训练
-     * @param train_X x
-     * @param train_Y  y
+     * 对模型进行训练
+     *
+     * @param train_X    x
+     * @param train_Y    y
      * @param batch_size bs
-     * @param epoch epoch
-     * @param Thread_n 使用的cpu线程数量
-     * @return  训练完成后的在x，y上的loss值
+     * @param epoch      epoch
+     * @param Thread_n   使用的cpu线程数量
      */
-    public float fit(float[][] train_X, float[][] train_Y, int batch_size, int epoch, int Thread_n){
+    public void fit(float[][] train_X, float[][] train_Y, int batch_size, int epoch, int Thread_n){
         //参数检查
-        if(batch_size<1 &&epoch <0) return 99999;
+        if(batch_size<1 &&epoch <0) return;
         //获取cpu核心数
         int core_number = Runtime.getRuntime().availableProcessors();
         if(Thread_n>core_number) Thread_n = core_number;
 
+        setTrain(true);
         if(batch_size == 1) {
             for(int i = 0; i < epoch; i++){
 
@@ -132,7 +148,7 @@ public class Sequential extends Layer{
                     upgradeWeight(d);
                 }
             }
-            System.out.println("");
+            System.out.println();
         } else if(batch_size >= train_X.length) {//batch_size和训练集一样，全批量梯度下降
             for (int i = 0; i < epoch; i++) {
                 upgradeBatch(train_X, train_Y, Thread_n);
@@ -147,10 +163,10 @@ public class Sequential extends Layer{
                 String title = "  epoch: " + (i + 1) + "  ";
                 upgrade_mini_batch_progressbar(Thread_n, train_x, train_y, title);
             }
-            System.out.println("");
+            System.out.println();
         }
 
-        return loss = calculateLoss(train_X, train_Y);
+        setTrain(false);
     }
 
     private void upgrade_mini_batch_progressbar(int Thread_n, ArrayList<float[][]> train_x, ArrayList<float[][]> train_y, String title) {
@@ -284,7 +300,7 @@ public class Sequential extends Layer{
         float[][] w_deltas = new float[layers.size()][];
         float[][] deltas = new float[2][];
 
-        deltas[0] = lossDelta(output.get(output.size()-1), y_train);
+        deltas[0] = lossLayer.gradient(output.get(output.size()-1), y_train);
 
         for(int i = output.size()-1; i > 0; i--) {
             deltas = layers.get(i).backward(output.get(i - 1), output.get(i), deltas[0]);
@@ -336,27 +352,11 @@ public class Sequential extends Layer{
 
     }
 
-
-
-    //计算loss层梯度
-    public float[] lossDelta(float[] out, float[] y_train){
-        float[] delta = new float[y_train.length];
-
-        for(int i = 0; i < y_train.length; i++){
-            delta[i] = Loss_Function.f_derivative(out[i], y_train[i]);
-        }
-        return delta;
-    }
-
-    private float loss(float[] x, float[] y){
-        float loss = 0;
-        float[] oi = forward(x);
-        for (int j = 0; j < oi.length; j ++){
-            loss += Loss_Function.f(oi[j], y[j]);
-        }
+    private float loss(float[] x, float[] y_t){
+        float[] y_pre = forward(x);
+        loss = lossLayer.loss(y_pre, y_t);
         return loss;
     }
-
 
     /**
      * 保存模型
@@ -372,7 +372,10 @@ public class Sequential extends Layer{
                 if (!file.exists()) break;
             }
         }
-        try { boolean newFile = file.createNewFile(); } catch (Exception ignored) { }
+
+        try {
+            boolean newFile = file.createNewFile();
+        } catch (Exception ignored) { }
 
         if(file.isFile()) {
             FileWriter fw = null;
@@ -414,19 +417,12 @@ public class Sequential extends Layer{
 
     @Override
     public void init(int input_width, int input_height, int input_Dimension) {
-        if(layers.size()>0){
+        if(!layers.isEmpty())
             layers.get(0).init(input_width, input_height, input_Dimension);
-        }
     }
 
     @Override
     public float[] forward(float[] inputs){
-        /*
-        float[] out = layers.get(0).forward(inputs);
-        for(int i = 1; i < layers.size(); i++){
-            out = layers.get(i).forward(out);
-        }
-        */
         ArrayList<float[]> output_list = forward_list(inputs);
         return output_list.get(output_list.size() - 1);
     }
@@ -478,6 +474,15 @@ public class Sequential extends Layer{
     }
 
     @Override
+    public int getWeightNumber_Train() {
+        int n = 0;
+        for (Layer layer : layers){
+            n += layer.getWeightNumber_Train();
+        }
+        return n;
+    }
+
+    @Override
     public void saveInFile(PrintWriter pw) throws Exception {
         pw.println(SaveData.sInt("Layer_ID", id));
 
@@ -494,7 +499,6 @@ public class Sequential extends Layer{
 
         pw.println(SaveData.sFloat("loss", loss));
         pw.println(SaveData.sFloat("learn_rate", learn_rate));
-        pw.println(SaveData.sInt("LossFunction", Loss_Function.id));
 
         for (Layer layer : layers)
             layer.saveInFile(pw);
@@ -515,7 +519,6 @@ public class Sequential extends Layer{
 
         loss = SaveData.getSFloat(in.readLine());
         learn_rate = SaveData.getSFloat(in.readLine());
-        Loss_Function = Function.getFunctionById(SaveData.getSInt(in.readLine()));
 
         while ((line=in.readLine()) != null){
             Layer layer = getLayerById(SaveData.getSInt(line));
@@ -526,23 +529,58 @@ public class Sequential extends Layer{
         setLearn_rate(learn_rate);
     }
 
+
     @Override
     public String toString() {
-        return "Sequential{" +
-                "EXPLAIN='" + EXPLAIN + '\'' +
-                ", Loss_Function=" + Loss_Function +
-                ", loss=" + loss +
-                ", learn_rate=" + learn_rate +
-                ", layers=" + layers +
-                ", learn_rate=" + learn_rate +
-                ", input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                ", activity_function=" + activation_function +
-                ", deltaOptimizer=" + deltaOptimizer +
-                '}';
+        StringBuilder stringBuilder = new StringBuilder();
+
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        char[] c0 = new char[32 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "(" + this.output_width + ", " + this.output_height + ", " + this.output_dimension + ")";
+
+        int v0 = 25 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+
+        int param = this.getWeightNumber_Train();
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+
+        for (Layer layer: layers){
+            stringBuilder.append("\n ").append(layer.toString());
+        }
+
+        return stringBuilder.toString();
     }
+
+
+    public String summary() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append( "Sequential: ").append(EXPLAIN).append("\n")
+                .append("_________________________________________________________________\n")
+                .append(" Layer (type)               Output Shape Dimension       Param  \n")
+                .append("=================================================================\n");
+
+
+        int total_params_train = 0;
+        int total_params = 0;
+        for (Layer layer: layers){
+           total_params += layer.getWeightNumber();
+            total_params_train += layer.getWeightNumber_Train();
+           stringBuilder.append(layer).append("\n");
+        }
+
+
+        stringBuilder.append("=================================================================\n")
+                .append("Total train params: ").append(total_params_train).append("\n")
+                .append("Total params: ").append(total_params).append("\n")
+                .append("_________________________________________________________________");
+
+        return  stringBuilder.toString();
+    }
+
 }

@@ -5,6 +5,7 @@ import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 public class ActivationLayer extends Layer{
 
@@ -63,8 +64,6 @@ public class ActivationLayer extends Layer{
 
         pw.println(SaveData.sInt("activation", activation_function.id));
 
-
-
     }
 
     @Override
@@ -81,4 +80,28 @@ public class ActivationLayer extends Layer{
         activation_function = Function.getFunctionById(activation_id);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder= new StringBuilder();
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        String activation_name = activation_function.getClass().getName();
+        activation_name = activation_name.substring(activation_name.lastIndexOf(".") + 1);
+        name = name + "-" + activation_name;
+
+        char[] c0 = new char[32 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "(" + output_width + ", " + output_height + ", " + output_dimension  + ")";
+
+        int v0 = 25 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+        int param = getWeightNumber_Train();
+
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        return stringBuilder.toString();
+    }
 }

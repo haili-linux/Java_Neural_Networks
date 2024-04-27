@@ -1,10 +1,11 @@
-package haili.deeplearn.model.layer.softmax;
+package haili.deeplearn.model.layer;
 
 import haili.deeplearn.model.layer.Layer;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 public class SoftmaxLayer extends Layer {
 
@@ -34,9 +35,9 @@ public class SoftmaxLayer extends Layer {
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        float[] t_delta = new float[deltas.length];
-        for (int i = 0; i < deltas.length; i++){
-            for(int j = 0; j < deltas.length; j++)
+        float[] t_delta = new float[inputs.length];
+        for (int i = 0; i < inputs.length; i++){
+            for(int j = 0; j < inputs.length; j++)
                 if(j == i)
                     t_delta[j] += deltas[i] * output[i] * ( 1 - output[i] );
                 else

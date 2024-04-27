@@ -1,9 +1,6 @@
 package haili.deeplearn.model.layer;
 
-
-
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
-import haili.deeplearn.Neuron;
 import haili.deeplearn.function.Function;
 import haili.deeplearn.utils.SaveData;
 
@@ -13,13 +10,19 @@ import java.io.PrintWriter;
 
 public class Dense extends Layer{
 
-    public Neuron[] neurons;
+    public float[][] w;
+    public float[] bias;
 
     public Dense(int input_Dimension, int output_Dimension, Function activation){
         id = 1;
         this.activation_function = activation;
         this.output_dimension = output_Dimension;
-        init(-1, -1, input_Dimension);
+        init(input_Dimension, 1, input_Dimension);
+    }
+
+    public Dense(int output_Dimension){
+        id = 1;
+        this.output_dimension = output_Dimension;
     }
 
 
@@ -27,7 +30,13 @@ public class Dense extends Layer{
         id = 1;
         this.output_dimension = output_Dimension;
         this.activation_function = activation;
-        //neurons = new Neuron[output_Dimension];
+    }
+
+    public Dense(int output_Dimension, Function activation, boolean use_bias){
+        id = 1;
+        this.output_dimension = output_Dimension;
+        this.activation_function = activation;
+        this.use_bias = use_bias;
     }
 
     public Dense(int input_width, int input_height, int output_width, int output_height, int output_dimension , Function activation){
@@ -53,22 +62,19 @@ public class Dense extends Layer{
 
     @Override
     public void init(int input_width, int input_height, int input_dimension){
-
-
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_dimension;
 
-        if(neurons != null)
+
+        if(w != null)
             return;
 
-        neurons = new Neuron[output_dimension];
+        w = new float[output_dimension][];
+        bias = new float[output_dimension];
 
-        for (int i = 0; i < neurons.length; i++)
-            if(this.use_bias)
-                neurons[i] = new Neuron(input_dimension, activation_function);
-            else
-                neurons[i] = new Neuron(input_dimension, 0f, activation_function);
+        for(int i = 0; i < output_dimension; i++)
+            w[i] = GaussRandomArrays(input_dimension);
     }
 
 
@@ -76,8 +82,15 @@ public class Dense extends Layer{
     public float[] forward(float[] inputs) {
         float[] output = new float[output_dimension];
 
-        for (int i = 0; i < output.length; i++)
-            output[i] = neurons[i].out_notSave(inputs);
+        for (int i = 0; i < output_dimension; i++) {
+
+            output[i] = bias[i];
+
+            for (int j = 0; j < input_dimension; j++)
+                output[i] += w[i][j] * inputs[j];
+
+            output[i] = activation_function.f( output[i]);
+        }
 
         return output;
     }
@@ -97,17 +110,15 @@ public class Dense extends Layer{
         float[] last_layer_deltas = new float[input_dimension];
 
         int index = 0;
-        for(int i = 0; i < neurons.length; i++){
-
-            deltas[i] *= neurons[i].ACT_function.f_derivative(output[i]);
+        for(int i = 0; i < output_dimension; i++){
+            deltas[i] *= activation_function.f_derivative(output[i]);
 
             if(use_bias)
                 w_b_deltas[index] = deltas[i];  //delta_bias
             index++;
 
-            for(int j = 0; j < neurons[i].w.length; j++) {
-                last_layer_deltas[j] += deltas[i] * neurons[i].w[j];
-
+            for(int j = 0; j < input_dimension; j++) {
+                last_layer_deltas[j] += deltas[i] * w[i][j];
                 w_b_deltas[index] = deltas[i] * inputs[j];
                 index++;
 
@@ -125,13 +136,12 @@ public class Dense extends Layer{
     @Override
     public void upgradeWeight(float[] weightDeltas) {
         int index = 0;
-
-        for (Neuron neuron : neurons) {
-            neuron.b -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
+        for (int i = 0; i < output_dimension; i++) {
+            bias[i] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
             index++;
 
-            for (int j = 0; j < neuron.w.length; j++) {
-                neuron.setW(j, neuron.w[j] - learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index));
+            for (int j = 0; j < input_dimension; j++) {
+                w[i][j] -= learn_rate * deltaOptimizer.DELTA(weightDeltas[index], index);
                 index++;
             }
         }
@@ -144,77 +154,73 @@ public class Dense extends Layer{
         super.setDeltaOptimizer(deltaOptimizer);
     }
 
-    @Override
-    public void setActivation_Function(Function activation) {
-        super.setActivation_Function(activation);
-        for (int i = 0; i < neurons.length; i++)
-            neurons[i].ACT_function = activation_function;
-    }
 
     int WeightNumber = -1;
     @Override
     public int getWeightNumber() {
         if(WeightNumber == -1)
-            WeightNumber =(input_dimension + 1) * output_dimension;
+            WeightNumber = (input_dimension + 1) * output_dimension;
 
         return WeightNumber;
     }
 
     @Override
+    public int getWeightNumber_Train() {
+        if(use_bias)
+            return getWeightNumber();
+        else
+            return getWeightNumber() - output_dimension;
+    }
+
+    @Override
     public void saveInFile(PrintWriter pw) throws Exception{
         pw.println(SaveData.sInt("Layer_ID", id));
+
+        pw.println(SaveData.sInt("input_width", input_width));
+        pw.println(SaveData.sInt("input_height", input_height));
         pw.println(SaveData.sInt("input_dimension", input_dimension));
+
+        pw.println(SaveData.sInt("output_width", output_width));
+        pw.println(SaveData.sInt("output_height", output_height));
         pw.println(SaveData.sInt("output_dimension", output_dimension));
+
+        pw.println(SaveData.sInt("activation", activation_function.id));
 
         int use_bias_int = 0;
         if(use_bias) use_bias_int = 1;
         pw.println(SaveData.sInt("use_bias", use_bias_int));
 
-        for(int i = 0; i < neurons.length; i++){
-            pw.println(SaveData.sInt("neurons[" + i + "].Act_Function_ID", neurons[i].ACT_function.id));
-            pw.println(SaveData.sFloat("neurons[" + i + "].bias", neurons[i].b));
-            for (int j = 0; j < neurons[i].w.length; j++)
-                pw.println(SaveData.sFloat("neurons[" + i + "].w[" + j + "]", neurons[i].w[j]));
+
+        pw.println(SaveData.sFloatArrays("bias", bias));
+
+
+        for(int i = 0; i < w.length; i++){
+            pw.println(SaveData.sFloatArrays("w[" + i + "]", w[i]));
         }
     }
 
     @Override
     public void initByFile(BufferedReader in) throws Exception{
-        input_width = input_height = -1;
 
+        input_width = SaveData.getSInt(in.readLine());
+        input_height = SaveData.getSInt(in.readLine());
         input_dimension = SaveData.getSInt(in.readLine());
+
+        output_width = SaveData.getSInt(in.readLine());
+        output_height = SaveData.getSInt(in.readLine());
         output_dimension = SaveData.getSInt(in.readLine());
+
+        activation_function = Function.getFunctionById(SaveData.getSInt(in.readLine()));
 
         int use_bias_int = SaveData.getSInt(in.readLine());
         if(use_bias_int == 0) this.use_bias = false;
 
-        neurons = new Neuron[output_dimension];
-        for(int i = 0; i < output_dimension; i++){
-            Neuron ni = new Neuron();
-            ni.input_dimension = input_dimension;
+        bias = SaveData.getsFloatArrays(in.readLine());
 
-            int actFunctionID = SaveData.getSInt(in.readLine());
-            ni.ACT_function = Function.getFunctionById(actFunctionID);
+        w = new float[output_dimension][];
+        for(int i = 0 ; i < output_dimension; i++)
+            w[i] = SaveData.getsFloatArrays(in.readLine());
 
-            ni.b = SaveData.getSFloat(in.readLine());
-            ni.w = new float[input_dimension];
-            for (int j = 0; j < input_dimension; j++)
-                ni.w[j] = SaveData.getSFloat(in.readLine());
-
-            neurons[i] = ni;
-        }
     }
 
-    @Override
-    public String toString() {
-        return "Dense{" +
-                "activation=" + activation_function +
-                ", input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                '}';
-    }
 }

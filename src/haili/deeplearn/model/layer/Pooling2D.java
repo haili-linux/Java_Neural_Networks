@@ -4,6 +4,7 @@ import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
+import java.util.Arrays;
 
 public class Pooling2D extends Layer{
 
@@ -151,20 +152,5 @@ public class Pooling2D extends Layer{
         channels = SaveData.getSInt(in.readLine());
 
         init(input_width, input_height, input_dimension);
-    }
-
-
-    @Override
-    public String toString() {
-        return "Pooling2D{" +
-                "input_dimension=" + input_dimension +
-                ", input_width=" + input_width +
-                ", input_height=" + input_height +
-                ", output_dimension=" + output_dimension +
-                ", output_width=" + output_width +
-                ", output_height=" + output_height +
-                ", kernel_width=" + kernel_width +
-                ", kernel_height=" + kernel_height +
-                '}';
     }
 }

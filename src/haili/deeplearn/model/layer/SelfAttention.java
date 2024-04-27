@@ -2,18 +2,15 @@ package haili.deeplearn.model.layer;
 
 import haili.deeplearn.DeltaOptimizer.BaseOptimizerInterface;
 import haili.deeplearn.function.Function;
-import haili.deeplearn.model.layer.softmax.SoftmaxLayer;
 import haili.deeplearn.utils.MatrixUtil;
 import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-
-import static java.lang.Float.NaN;
+import java.util.Arrays;
 
 
 public class SelfAttention extends Layer{
-
 
     public Dense q_layer, k_layer, v_layer;
     public Layer scoreLayer = new SoftmaxLayer();
@@ -215,6 +212,10 @@ public class SelfAttention extends Layer{
         return  wn;
     }
 
+    @Override
+    public int getWeightNumber_Train() {
+        return q_layer.getWeightNumber_Train() + k_layer.getWeightNumber_Train() + v_layer.getWeightNumber_Train();
+    }
 
     @Override
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer) {
@@ -248,5 +249,21 @@ public class SelfAttention extends Layer{
 
         v_layer = (Dense) getLayerById(SaveData.getSInt(in.readLine()));
         v_layer.initByFile(in);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder= new StringBuilder();
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        char[] c0 = new char[32 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "intput:(N, " + input_dimension + ")  output:(N, " + output_dimension + ")  ";
+        int param = getWeightNumber_Train();
+
+        stringBuilder.append(name).append(c0).append(output_shape).append(param);
+        return stringBuilder.toString();
     }
 }
