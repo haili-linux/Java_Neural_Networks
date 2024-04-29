@@ -83,6 +83,7 @@ public class SelfAttention extends Layer{
 
         // 计算 Q * K
         float[][] score = new float[seqLen][seqLen];
+
         for(int i = 0; i < seqLen; i++) {
             for(int j = 0; j < seqLen; j++) {
                 score[i][j] = MatrixUtil.dot(q[i], k[j]) / sqrt_d;
@@ -94,8 +95,9 @@ public class SelfAttention extends Layer{
             // 计算输出
             int od =  i * output_width;
             for(int ik = 0; ik < output_width; ik++) {
+                int index_outputs = od + ik;
                 for (int ij = 0; ij < seqLen; ij++) {
-                    outputs[od + ik] +=  (score[i][ij] * v[ij][ik]);
+                    outputs[index_outputs] +=  (score[i][ij] * v[ij][ik]);
                 }
             }
         }
@@ -119,7 +121,9 @@ public class SelfAttention extends Layer{
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         // 当前输入的seq数量
-        int seqLen = deltas.length / output_width;
+        int seqLen = output.length / output_width;
+
+        int seqLen_deltas =  deltas.length / output_width;
 
         float sqrt_d =  (float) Math.sqrt(q_layer.output_dimension);
 
@@ -135,13 +139,14 @@ public class SelfAttention extends Layer{
         float[][] v_deltas = new float[seqLen][output_width];
 
         float[][] score_deltas = new float[seqLen][seqLen];
-        for(int i = 0; i < seqLen; i++) {
+        for(int i = 0; i < seqLen_deltas; i++) {
             // 计算输出
             int od =  i * output_width;
             for(int ik = 0; ik < output_width; ik++) {
+                int v0 = od + ik;
                 for (int ij = 0; ij < seqLen; ij++) {
-                    score_deltas[i][ij] +=  v[ij][ik] * deltas[od + ik] / sqrt_d;
-                    v_deltas[ij][ik] += score[i][ij] * deltas[od + ik] / sqrt_d;
+                    score_deltas[i][ij] +=  v[ij][ik] * deltas[v0] / sqrt_d;
+                    v_deltas[ij][ik] += score[i][ij] * deltas[v0] / sqrt_d;
                 }
             }
 
@@ -257,13 +262,19 @@ public class SelfAttention extends Layer{
         String name = this.getClass().getName();
         name = " " + name.substring(name.lastIndexOf(".") + 1);
 
-        char[] c0 = new char[32 - name.length()];
+        char[] c0 = new char[27 - name.length()];
         Arrays.fill(c0, ' ');
 
-        String output_shape = "intput:(N, " + input_dimension + ")  output:(N, " + output_dimension + ")  ";
+        String output_shape = "in:(N, " + input_dimension + ")  out:(N, " + output_dimension + ")  ";
+
+        int v0 = 30 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(param);
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
         return stringBuilder.toString();
     }
 }

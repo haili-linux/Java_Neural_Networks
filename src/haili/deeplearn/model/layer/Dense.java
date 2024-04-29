@@ -62,13 +62,12 @@ public class Dense extends Layer{
 
     @Override
     public void init(int input_width, int input_height, int input_dimension){
+        if(w != null)
+            return;
+
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_dimension;
-
-
-        if(w != null)
-            return;
 
         w = new float[output_dimension][];
         bias = new float[output_dimension];

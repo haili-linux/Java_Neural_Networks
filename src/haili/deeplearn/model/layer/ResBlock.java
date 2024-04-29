@@ -105,10 +105,10 @@ public class ResBlock extends Layer{
         }
 
         Layer outlayer = layers.get(layers.size() - 1);
+        this.output_width = outlayer.output_width;
+        this.output_height = outlayer.output_height;
         if(ResConnectType == ResConnectType_Add){
             //残差连接方式0: 相加
-            this.output_width = outlayer.output_width;
-            this.output_height = outlayer.output_height;
             this.output_dimension = outlayer.output_dimension;
         } else if(ResConnectType == ResConnectType_Concat){
             //残差连接方式1: 拼接
