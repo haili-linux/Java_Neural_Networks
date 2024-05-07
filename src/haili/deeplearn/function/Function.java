@@ -3,7 +3,6 @@ package haili.deeplearn.function;
 
 import haili.deeplearn.function.activation.*;
 import haili.deeplearn.function.loss.CELoss;
-import haili.deeplearn.function.loss.CESLoss;
 import haili.deeplearn.function.loss.MSELoss;
 
 public class Function
@@ -32,7 +31,7 @@ public class Function
 
 			case 10:r = new MSELoss(); break;
 			case 11:r = new CELoss();  break;
-			case 12:r = new CESLoss(); break;
+
 			default:r = new Function(); break;
 		}
 		return r;

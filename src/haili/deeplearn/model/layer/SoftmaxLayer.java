@@ -35,9 +35,9 @@ public class SoftmaxLayer extends Layer {
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        float[] t_delta = new float[inputs.length];
-        for (int i = 0; i < inputs.length; i++){
-            for(int j = 0; j < inputs.length; j++)
+        float[] t_delta = new float[output.length];
+        for (int i = 0; i < output.length; i++){
+            for(int j = 0; j < output.length; j++)
                 if(j == i)
                     t_delta[j] += deltas[i] * output[i] * ( 1 - output[i] );
                 else
