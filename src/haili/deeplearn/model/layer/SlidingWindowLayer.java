@@ -63,7 +63,9 @@ public class SlidingWindowLayer extends Layer{
         float[] w_deltas = new float[model.getWeightNumber()];
         float[] inputs_deltas = new float[inputs.length];
 
-        for(int i = 0; i < inputs_.length; i++){
+        int len = deltas.length / output_dimension;
+
+        for(int i = 0; i < len; i++){
             float[] deltas_i = new float[output_dimension];
             System.arraycopy(deltas, i * output_dimension, deltas_i, 0, output_dimension);
             //for(int j = 0;  j < output_dimension; j++)
