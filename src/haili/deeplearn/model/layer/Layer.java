@@ -133,6 +133,7 @@ public class Layer implements LayerInterface{
             case 11:layer = new Dropout(0.5); break;
             case 12:layer = new SlidingWindowLayer(1, new Layer()); break;
             case 13:layer = new PositionLayer(1,1,1); break;
+            case 14:layer = new CombineSequencesLayer(1); break;
             default:layer = new Layer(); break;
         }
         return layer;

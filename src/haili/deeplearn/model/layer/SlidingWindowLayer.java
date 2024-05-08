@@ -5,7 +5,6 @@ import haili.deeplearn.utils.SaveData;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class SlidingWindowLayer extends Layer{
@@ -133,7 +132,7 @@ public class SlidingWindowLayer extends Layer{
         char[] c0 = new char[27 - name.length()];
         Arrays.fill(c0, ' ');
 
-        String output_shape = "in:(N, " + input_dimension + ")  out:(N, " + output_dimension + ")  ";
+        String output_shape = "in:(N, " + input_width + ")  out:(N, " + output_dimension + ")  ";
 
         int v0 = 30 - output_shape.length();
         if(v0 < 1) v0 = 1;

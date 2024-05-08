@@ -147,4 +147,27 @@ public class PositionLayer extends Layer{
         this.output_height = 1;
         this.output_dimension = this.output_width;
     }
+
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder= new StringBuilder();
+        String name = this.getClass().getName();
+        name = " " + name.substring(name.lastIndexOf(".") + 1);
+
+        char[] c0 = new char[27 - name.length()];
+        Arrays.fill(c0, ' ');
+
+        String output_shape = "in:(N, " + input_dimension + ")  out:(N, " + output_dimension + ")  ";
+
+        int v0 = 30 - output_shape.length();
+        if(v0 < 1) v0 = 1;
+        char[] c1 = new char[v0];
+        Arrays.fill(c1, ' ');
+
+        int param = getWeightNumber_Train();
+
+        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        return stringBuilder.toString();
+    }
 }
