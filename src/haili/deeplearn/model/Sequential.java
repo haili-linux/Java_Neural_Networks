@@ -500,6 +500,8 @@ public class Sequential extends Layer{
         pw.println(SaveData.sFloat("loss", loss));
         pw.println(SaveData.sFloat("learn_rate", learn_rate));
 
+        pw.println(SaveData.sInt("layers_number", layers.size()));
+
         for (Layer layer : layers)
             layer.saveInFile(pw);
     }
@@ -520,10 +522,15 @@ public class Sequential extends Layer{
         loss = SaveData.getSFloat(in.readLine());
         learn_rate = SaveData.getSFloat(in.readLine());
 
-        while ((line=in.readLine()) != null){
+        int layer_num = SaveData.getSInt(in.readLine());
+
+        while ((line = in.readLine()) != null){
             Layer layer = getLayerById(SaveData.getSInt(line));
             layer.initByFile(in);
             layers.add(layer);
+
+            if(layers.size() == layer_num)
+                break;
         }
 
         setLearn_rate(learn_rate);
