@@ -72,9 +72,9 @@ public class SlidingWindowLayer extends Layer{
 
             float[][] backs = model.backward(inputs_[i], outputs_[i], deltas_i);
 
-            System.arraycopy(backs[0], 0, inputs_deltas, i * input_width, output_dimension);
-            //for(int j = 0;  j < output_dimension; j++)
-            //   inputs_deltas[i * input_width + j] = backs[0][j];
+            System.arraycopy(backs[0], 0, inputs_deltas, i * input_width, input_dimension);
+            //for(int j = 0;  j < input_dimension; j++)
+            //    inputs_deltas[i * input_width + j] = backs[0][j];
 
             for(int j = 0;  j < w_deltas.length; j++)
                 w_deltas[j] += backs[1][j];

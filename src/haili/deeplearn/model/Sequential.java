@@ -154,12 +154,11 @@ public class Sequential extends Layer{
                 upgradeBatch(train_X, train_Y, Thread_n);
             }
         } else {//mini-batch
-
-            ArrayList<float[][]>[] data = DataSetUtils.splitBatch(train_X, train_Y, batch_size);
-            ArrayList<float[][]> train_x = data[0];
-            ArrayList<float[][]> train_y = data[1];
-
             for (int i = 0; i < epoch; i++){
+                ArrayList<float[][]>[] data = DataSetUtils.splitBatch(train_X, train_Y, batch_size);
+                ArrayList<float[][]> train_x = data[0];
+                ArrayList<float[][]> train_y = data[1];
+
                 String title = "  epoch: " + (i + 1) + "  ";
                 upgrade_mini_batch_progressbar(Thread_n, train_x, train_y, title);
             }
