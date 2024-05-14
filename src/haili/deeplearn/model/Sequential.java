@@ -533,6 +533,7 @@ public class Sequential extends Layer{
         while ((line = in.readLine()) != null){
             Layer layer = getLayerById(SaveData.getSInt(line));
             layer.initByFile(in);
+            layer.addDeepOfSequential();
             layers.add(layer);
 
             if(layers.size() == layer_num)
@@ -562,8 +563,13 @@ public class Sequential extends Layer{
 
         int param = this.getWeightNumber_Train();
 
-        char[] c2 = new char[deepOfSequential * 2];
-        Arrays.fill(c2, ' ');
+
+        char[] c2 = new char[0];
+        if(deepOfSequential > 0) {
+            c2 = new char[deepOfSequential * 2];
+            Arrays.fill(c2, ' ');
+        }
+
         stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
 
         for (Layer layer: layers){

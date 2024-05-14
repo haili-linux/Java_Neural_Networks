@@ -168,8 +168,11 @@ public class CombineSequencesLayer extends Layer{
 
         int param = getWeightNumber_Train();
 
-        char[] c2 = new char[deepOfSequential * 2];
-        Arrays.fill(c2, ' ');
+        char[] c2 = new char[0];
+        if(deepOfSequential > 0) {
+            c2 = new char[deepOfSequential * 2];
+            Arrays.fill(c2, ' ');
+        }
 
         stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
         return stringBuilder.toString();
