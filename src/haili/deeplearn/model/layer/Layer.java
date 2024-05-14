@@ -29,6 +29,13 @@ public class Layer implements LayerInterface{
     public Function activation_function = new Function();
     protected BaseOptimizerInterface deltaOptimizer = new BaseOptimizer();
 
+    //该层在模型中的深度
+    public int deepOfSequential = -1;
+
+    public void addDeepOfSequential() {
+        this.deepOfSequential++;
+    }
+
     //使用偏置值bias
     public boolean use_bias = true;
 
@@ -156,7 +163,11 @@ public class Layer implements LayerInterface{
         Arrays.fill(c1, ' ');
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }

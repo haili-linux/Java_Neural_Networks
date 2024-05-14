@@ -54,14 +54,6 @@ public class Adam implements BaseOptimizerInterface {
 
     @Override
     public synchronized float DELTA(float delta, int index) {
-        /*
-        if(p == len) {
-            p = 0;
-            v1_t *= v1;
-            v2_t *= v2;
-        } else {
-            p++;
-        }*/
 
         m[index] = v1 * m[index] + dv1 * delta;
         v[index] = v2 * v[index] + dv2 * delta * delta;
@@ -69,7 +61,7 @@ public class Adam implements BaseOptimizerInterface {
         float m_ = m[index] / (1 - v1_t);
         float v_ = v[index] / (1 - v2_t);
 
-        return (float)(m_ / ( Math.sqrt(v_) + e ));
+        return  (float)(m_ / ( Math.sqrt(v_) + e ));
     }
 
 

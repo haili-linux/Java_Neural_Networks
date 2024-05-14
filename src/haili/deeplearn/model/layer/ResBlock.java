@@ -44,6 +44,15 @@ public class ResBlock extends Layer{
         this.activation_function = Function.getFunctionById(layer.activation_function.id);
         layer.activation_function = new Function();
         layers.add(layer);
+        layer.addDeepOfSequential();
+    }
+
+
+    @Override
+    public void addDeepOfSequential() {
+        this.deepOfSequential++;
+        for (Layer layer: layers)
+            layer.addDeepOfSequential();
     }
 
 
@@ -52,6 +61,7 @@ public class ResBlock extends Layer{
         for (Layer layer: layers)
             layer.setSaveHiddenLayerOutput(b);
     }
+
 
     public void clearHiddenLayerOutput(){
         this.hiddenLayerOutputMap.clear();
@@ -196,7 +206,9 @@ public class ResBlock extends Layer{
                     System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
                 }
 
-                for (int i = 0; i < back[0].length; i++)
+                //for (int i = 0; i < back[0].length; i++)
+                //    back[0][i] += deltas[outLayer_dimension + i];
+                for (int i = 0; i < deltas.length - outLayer_dimension; i++)
                     back[0][i] += deltas[outLayer_dimension + i];
             }
 
@@ -205,10 +217,10 @@ public class ResBlock extends Layer{
 
     @Override
     public float[] forward(float[] inputs) {
-        float[] out = layers.get(0).forward(inputs);
+        float[] outputs = layers.get(0).forward(inputs);
 
         for(int i = 1; i < layers.size(); i++)
-            out = layers.get(i).forward(out);
+            outputs = layers.get(i).forward(outputs);
 
         if(ResConnectType == ResConnectType_Add){
             //残差连接方式0: 相加
@@ -217,19 +229,19 @@ public class ResBlock extends Layer{
                 System.exit(0);
             } else {
                 //跨层连接
-                out = MatrixUtil.add(out, inputs);
+                outputs = MatrixUtil.add(outputs, inputs);
 
-                for(int i = 0; i < out.length; i++)
-                    out[i] = activation_function.f(out[i]);
+                for(int i = 0; i < outputs.length; i++)
+                    outputs[i] = activation_function.f(outputs[i]);
             }
         } else if(ResConnectType == ResConnectType_Concat){
-            for(int i = 0; i < out.length; i++)
-                out[i] = activation_function.f(out[i]);
+            for(int i = 0; i < outputs.length; i++)
+                outputs[i] = activation_function.f(outputs[i]);
             //残差连接方式1: 拼接 out = { out0, out1, out2, ..., outN, input0, intput1, ..., inputN}
-            out = MatrixUtil.combine(out, inputs);
+            outputs = MatrixUtil.combine(outputs, inputs);
         }
 
-        return out;
+        return outputs;
     }
 
     @Override
@@ -361,10 +373,13 @@ public class ResBlock extends Layer{
         Arrays.fill(c1, ' ');
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
 
         for (Layer layer: layers){
-            stringBuilder.append("\n ").append(layer.toString());
+            stringBuilder.append("\n").append(layer.toString());
         }
 
         return stringBuilder.toString();

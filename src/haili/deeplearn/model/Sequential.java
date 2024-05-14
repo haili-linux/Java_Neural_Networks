@@ -82,6 +82,7 @@ public class Sequential extends Layer{
 
 
         layers.add(layer);
+        layer.addDeepOfSequential();
 
         //是全连接层
         if(layer.id == new Dense(1, new Function()).id) {
@@ -94,7 +95,13 @@ public class Sequential extends Layer{
         output_height = layer.output_height;
     }
 
-  
+    @Override
+    public void addDeepOfSequential() {
+        this.deepOfSequential++;
+        for (Layer layer: layers)
+            layer.addDeepOfSequential();
+    }
+
     public void setLoss_Function(Function loss_Function){
         this.lossLayer.loss_function = loss_Function;
     }
@@ -554,10 +561,13 @@ public class Sequential extends Layer{
         Arrays.fill(c1, ' ');
 
         int param = this.getWeightNumber_Train();
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
 
         for (Layer layer: layers){
-            stringBuilder.append("\n ").append(layer.toString());
+            stringBuilder.append("\n").append(layer.toString());
         }
 
         return stringBuilder.toString();
@@ -566,27 +576,44 @@ public class Sequential extends Layer{
 
     public String summary() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append( "Sequential: ").append(EXPLAIN).append("\n")
-                .append("_________________________________________________________________\n")
-                .append(" Layer (type)               Output Shape Dimension       Param  \n")
-                .append("=================================================================\n");
 
-
+        int maxDeep = 0;
         int total_params_train = 0;
         int total_params = 0;
         for (Layer layer: layers){
-           total_params += layer.getWeightNumber();
+
+            total_params += layer.getWeightNumber();
             total_params_train += layer.getWeightNumber_Train();
-           stringBuilder.append(layer).append("\n");
+
+
+            stringBuilder.append(layer).append("\n");
+
+            String[] layer_strs = layer.toString().split("\n");
+            for (String layer_str: layer_strs)
+                if(layer_str.length() > maxDeep)
+                    maxDeep = layer_str.length();
         }
 
+        char[] c1 = new char[maxDeep];
+        char[] c2 = new char[maxDeep];
+        Arrays.fill(c1, '_');
+        Arrays.fill(c2, '=');
 
-        stringBuilder.append("=================================================================\n")
+
+
+        stringBuilder.append(c2).append("\n")
                 .append("Total train params: ").append(total_params_train).append("\n")
                 .append("Total params: ").append(total_params).append("\n")
-                .append("_________________________________________________________________");
+                .append(c1);
 
-        return  stringBuilder.toString();
+        StringBuilder stringBuilder_head = new StringBuilder();
+        stringBuilder_head.append( "Sequential: ").append(EXPLAIN).append("\n")
+                .append(c1).append("\n")
+                .append(" Layer (type)               Output Shape Dimension       Param  \n")
+                .append(c2).append("\n")
+                .append(stringBuilder);
+
+        return  stringBuilder_head.toString();
     }
 
 }

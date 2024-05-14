@@ -10,11 +10,6 @@ import java.util.Arrays;
 
 public class PositionLayer extends Layer{
 
-    public static void main(String[] args) {
-        PositionLayer positionLayer = new PositionLayer(5, 4, 16);
-        System.out.println(Arrays.toString(positionLayer.forward(new float[5 * 5])));
-    }
-
     public float[][] positionCode;
 
     public PositionLayer(int one_inputVector_dimension ,int positionCodeVector, int maxPosition){
@@ -167,7 +162,11 @@ public class PositionLayer extends Layer{
 
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }

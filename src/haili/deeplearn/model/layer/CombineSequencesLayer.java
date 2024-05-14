@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public class CombineSequencesLayer extends Layer{
 
-    public Dense dense;
+    public Layer layer;
 
     public CombineSequencesLayer(int one_input_vector_dimension){
         this.id = 14;
@@ -23,8 +23,25 @@ public class CombineSequencesLayer extends Layer{
         this.output_height = 1;
         this.output_dimension = one_input_vector_dimension;
 
-        dense = new Dense(input_width, 1, output_width, 1, output_width, new Function(), false);
+        layer = new Dense(input_width, 1, output_width, 1, output_width, new Function(), false);
+        layer.addDeepOfSequential();
     }
+
+    public CombineSequencesLayer(Layer layer){
+        this.id = 14;
+
+        this.input_width = layer.input_width;
+        this.input_height = layer.input_height;
+        this.input_dimension = layer.input_dimension;
+
+        this.output_width = layer.output_width;
+        this.output_height = layer.output_height;
+        this.output_dimension = layer.output_dimension;
+
+        this.layer = layer;
+        this.layer.addDeepOfSequential();
+    }
+
 
     @Override
     public void init(int input_width, int input_height, int input_Dimension) {
@@ -44,7 +61,7 @@ public class CombineSequencesLayer extends Layer{
             inputs_[i] = new float[input_width];
             System.arraycopy(inputs, i * input_width, inputs_[i], 0, input_width);
 
-            outputs_[i] = dense.forward(inputs_[i]);
+            outputs_[i] = layer.forward(inputs_[i]);
             for(int j = 0; j < output_width; j++)
                 outputs[j] += outputs_[i][j];
         }
@@ -69,7 +86,7 @@ public class CombineSequencesLayer extends Layer{
         float[] input_deltas = new float[inputs.length];
 
         for(int seqi = 0; seqi < inputs_.length; seqi++){
-            float[][] backs_i = dense.backward(inputs_[seqi], outputs_[seqi], deltas);
+            float[][] backs_i = layer.backward(inputs_[seqi], outputs_[seqi], deltas);
             float[] inputs_di = backs_i[0];
             float[] wd_i = backs_i[1];
 
@@ -87,19 +104,19 @@ public class CombineSequencesLayer extends Layer{
 
     @Override
     public int getWeightNumber() {
-        return dense.getWeightNumber();
+        return layer.getWeightNumber();
     }
 
 
     @Override
     public int getWeightNumber_Train() {
-        return dense.getWeightNumber_Train();
+        return layer.getWeightNumber_Train();
     }
 
 
     @Override
     public void setDeltaOptimizer(BaseOptimizerInterface deltaOptimizer) {
-        dense.setDeltaOptimizer(deltaOptimizer);
+        layer.setDeltaOptimizer(deltaOptimizer);
     }
 
 
@@ -109,23 +126,27 @@ public class CombineSequencesLayer extends Layer{
 
         pw.println(SaveData.sInt("input_width", input_width));
 
-        dense.saveInFile(pw);
+        layer.saveInFile(pw);
     }
 
 
     @Override
     public void initByFile(BufferedReader in) throws Exception {
         int one_input_vector_dimension = SaveData.getSInt(in.readLine());
-        dense = (Dense) Layer.getLayerById(SaveData.getSInt(in.readLine()));
-        dense.initByFile(in);
 
-        this.input_width = one_input_vector_dimension;
-        this.input_height = 1;
-        this.input_dimension = one_input_vector_dimension;
+        layer = Layer.getLayerById(SaveData.getSInt(in.readLine()));
+        layer.initByFile(in);
+        layer.addDeepOfSequential();
 
-        this.output_width = one_input_vector_dimension;
-        this.output_height = 1;
-        this.output_dimension = one_input_vector_dimension;
+        this.input_width = one_input_vector_dimension;//layer.input_width;
+        this.input_height = layer.input_height;
+        this.input_dimension = layer.input_dimension;
+
+        this.output_width = layer.output_width;
+        this.output_height = layer.output_height;
+        this.output_dimension = layer.output_dimension;
+
+
     }
 
 
@@ -147,7 +168,10 @@ public class CombineSequencesLayer extends Layer{
 
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
         return stringBuilder.toString();
     }
 }

@@ -162,9 +162,7 @@ public class FilterResponseNormalization extends Layer{
 
         float var0 = (float) Math.pow(v2, -1.5);
 
-        int m = input_width * input_height;
-
-
+        //int m = input_width * input_height;
 
         float[] DL_dX_ = new float[inputs.length];
         float DL_Dv2 = 0;
@@ -189,7 +187,6 @@ public class FilterResponseNormalization extends Layer{
             for(int i = start; i < end; i++){
                 w_b_deltas[ci] += deltas[i] * x_[i];          //dw  检验通过
                 w_b_deltas[ci + w.length] += deltas[i];
-
                 last_deltas[i] = DL_dX_[i] / v + DL_Dv2 * inputs[i];
             }
         }
@@ -282,7 +279,11 @@ public class FilterResponseNormalization extends Layer{
         Arrays.fill(c1, ' ');
         int param = getWeightNumber();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }

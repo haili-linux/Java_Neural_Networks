@@ -22,26 +22,35 @@ public class SoftmaxLayer extends Layer {
     @Override
     public float[] forward(float[] inputs) {
         float total = 0;
-        for(int i = 0; i < inputs.length; i++){
-            inputs[i] = (float) Math.exp(inputs[i]);
-            total += inputs[i];
+        float[] outputs = new float[inputs.length];
+        for(int i = 0; i < outputs.length; i++){
+            outputs[i] = (float) Math.exp(inputs[i]);
+            total += outputs[i];
         }
 
-        for(int i = 0; i < inputs.length; i++)
-            inputs[i] /= total;
-
-        return inputs;
+        for(int i = 0; i < inputs.length; i++) {
+            if (Float.isInfinite(total)) {
+                if (Float.isInfinite(outputs[i]))
+                    outputs[i] = 1;
+                else
+                    outputs[i] = 0;
+            } else {
+                outputs[i] /= total;
+            }
+        }
+        return outputs;
     }
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         float[] t_delta = new float[output.length];
         for (int i = 0; i < output.length; i++){
-            for(int j = 0; j < output.length; j++)
-                if(j == i)
-                    t_delta[j] += deltas[i] * output[i] * ( 1 - output[i] );
+            for(int j = 0; j < output.length; j++) {
+                if (j == i)
+                    t_delta[j] += deltas[i] * output[i] * (1 - output[i]);
                 else
                     t_delta[j] += deltas[i] * (-output[i]) * output[j];
+            }
         }
 
         return new float[][]{t_delta, new float[0]};

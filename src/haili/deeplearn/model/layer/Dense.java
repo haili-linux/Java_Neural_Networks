@@ -79,19 +79,19 @@ public class Dense extends Layer{
 
     @Override
     public float[] forward(float[] inputs) {
-        float[] output = new float[output_dimension];
+        float[] outputs = new float[output_dimension];
 
         for (int i = 0; i < output_dimension; i++) {
 
-            output[i] = bias[i];
+            outputs[i] = bias[i];
 
             for (int j = 0; j < input_dimension; j++)
-                output[i] += w[i][j] * inputs[j];
+                outputs[i] += w[i][j] * inputs[j];
 
-            output[i] = activation_function.f( output[i]);
+            outputs[i] = activation_function.f( outputs[i]);
         }
 
-        return output;
+        return outputs;
     }
 
 
@@ -114,13 +114,14 @@ public class Dense extends Layer{
 
             if(use_bias)
                 w_b_deltas[index] = deltas[i];  //delta_bias
+
             index++;
 
             for(int j = 0; j < input_dimension; j++) {
                 last_layer_deltas[j] += deltas[i] * w[i][j];
                 w_b_deltas[index] = deltas[i] * inputs[j];
-                index++;
 
+                index++;
             }
         }
 

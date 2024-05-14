@@ -85,6 +85,7 @@ public class SelfAttention extends Layer{
         float[][] score = new float[seqLen][seqLen];
 
         for(int i = 0; i < seqLen; i++) {
+
             for(int j = 0; j < seqLen; j++) {
                 score[i][j] = MatrixUtil.dot(q[i], k[j]) / sqrt_d;
             }
@@ -254,6 +255,9 @@ public class SelfAttention extends Layer{
 
         v_layer = (Dense) getLayerById(SaveData.getSInt(in.readLine()));
         v_layer.initByFile(in);
+
+        input_dimension = input_width;
+        output_dimension = output_width;
     }
 
     @Override
@@ -274,7 +278,11 @@ public class SelfAttention extends Layer{
 
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }

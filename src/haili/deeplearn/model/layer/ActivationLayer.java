@@ -34,8 +34,9 @@ public class ActivationLayer extends Layer{
     @Override
     public float[] forward(float[] inputs) {
         float[] outputs = new float[output_dimension];
-        for(int i = 0; i < output_dimension; i++)
+        for(int i = 0; i < output_dimension; i++) {
             outputs[i] = activation_function.f(inputs[i]);
+        }
 
         return outputs;
     }
@@ -43,8 +44,9 @@ public class ActivationLayer extends Layer{
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
         float[] last_deltas = new float[input_dimension];
-        for(int i = 0; i < output_dimension; i++)
+        for(int i = 0; i < output_dimension; i++) {
             last_deltas[i] = deltas[i] * activation_function.f_derivative(output[i]);
+        }
 
         return  new float[][]{last_deltas, new float[0]};
     }
@@ -101,7 +103,11 @@ public class ActivationLayer extends Layer{
         Arrays.fill(c1, ' ');
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }

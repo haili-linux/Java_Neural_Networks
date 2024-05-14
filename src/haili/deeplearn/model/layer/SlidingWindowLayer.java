@@ -14,6 +14,7 @@ public class SlidingWindowLayer extends Layer{
     public SlidingWindowLayer(int one_input_vector_dimension, Layer model){
         this.id = 12;
         this.model = model;
+        this.model.addDeepOfSequential();
 
         model.init(one_input_vector_dimension, 1, one_input_vector_dimension);
 
@@ -21,6 +22,17 @@ public class SlidingWindowLayer extends Layer{
         this.output_width = model.output_dimension;
         this.output_dimension = model.output_dimension;
     }
+
+    public SlidingWindowLayer(Layer model){
+        this.id = 12;
+        this.model = model;
+        this.model.addDeepOfSequential();
+
+        this.input_width = model.input_dimension;
+        this.output_width = model.output_dimension;
+        this.output_dimension = model.output_dimension;
+    }
+
 
     @Override
     public void init(int input_width, int input_height, int input_Dimension) {  }
@@ -121,6 +133,7 @@ public class SlidingWindowLayer extends Layer{
 
         model = Layer.getLayerById(SaveData.getSInt(in.readLine()));
         model.initByFile(in);
+        model.addDeepOfSequential();
     }
 
     @Override
@@ -141,7 +154,10 @@ public class SlidingWindowLayer extends Layer{
 
         int param = getWeightNumber_Train();
 
-        stringBuilder.append(name).append(c0).append(output_shape).append(c1).append(param);
+        char[] c2 = new char[deepOfSequential * 2];
+        Arrays.fill(c2, ' ');
+        stringBuilder.append(c2).append(name).append(c0).append(output_shape).append(c1).append(param);
+
         return stringBuilder.toString();
     }
 }
