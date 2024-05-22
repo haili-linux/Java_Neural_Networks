@@ -53,12 +53,23 @@ public class Sequential extends Layer{
     public Sequential(String fileName){
         id = 0;
         try {
-            initByFile(fileName);
+            File file = new File(fileName);
+            initByFile(file);
         } catch (Exception exception) {
             exception.printStackTrace();
         }
     }
 
+    public Sequential(BufferedReader in){
+        id = 0;
+        try {
+            in.readLine();
+            initByFile(in);
+        } catch (Exception ignored){
+
+        }
+
+    }
 
     public void addLayer(Layer layer){
 
@@ -402,8 +413,7 @@ public class Sequential extends Layer{
         }
     }
 
-    private void initByFile(String fileName) throws Exception{
-        File file = new File(fileName);
+    private void initByFile(File file) throws Exception{
         if(file.isFile())
             try {
                 FileReader fileReader = null;
