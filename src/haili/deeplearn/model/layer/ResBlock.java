@@ -22,6 +22,8 @@ public class ResBlock extends Layer{
 
     public ArrayList<Layer> layers = new ArrayList<>();
 
+    Layer resLayer = null;
+
     public ResBlock(int ResConnectType){
         this.id = 5;
         this.ResConnectType = ResConnectType;
@@ -33,7 +35,15 @@ public class ResBlock extends Layer{
         this.ResConnectType = ResConnectType;
     }
 
-    public void addLayer(Layer layer){
+    public ResBlock(Layer resLayer, int ResConnectType){
+        this.id = 5;
+        this.ResConnectType = ResConnectType;
+
+        this.resLayer = resLayer;
+    }
+
+
+    public ResBlock addLayer(Layer layer){
         if(layers.isEmpty()){
             this.output_dimension = layer.output_dimension;
         } else {
@@ -45,6 +55,8 @@ public class ResBlock extends Layer{
         layer.activation_function = new Function();
         layers.add(layer);
         layer.addDeepOfSequential();
+
+        return this;
     }
 
 
@@ -75,27 +87,35 @@ public class ResBlock extends Layer{
      * @param inputs inputs
      * @return 网络每层的的输出
      */
-    private ArrayList<float[]> forward_list(float[] inputs){
-        ArrayList<float[]> output;
+    private Object[] forward_list(float[] inputs){
+        Object[] outputs;
+
         // 如果有缓存，从缓存读取，不需要重新计算
         if(saveHiddenLayerOutput && hiddenLayerOutputMap.containsKey(inputs)) {
-            output = (ArrayList<float[]>) hiddenLayerOutputMap.get(inputs);
-            if(output != null)
-                return output;
+            outputs = (Object[]) hiddenLayerOutputMap.get(inputs);
+            if(outputs != null)
+                return outputs;
         }
 
-        output = new ArrayList<>();
-        output.add( layers.get(0).forward(inputs) );
+        ArrayList<float[]> layers_Outputs = new ArrayList<>();
+        layers_Outputs.add(layers.get(0).forward(inputs));
 
-        for(int i = 1; i < layers.size(); i++){
-            output.add( layers.get(i).forward(output.get(i-1)) );
-        }
+        for(int i = 1; i < layers.size(); i++)
+            layers_Outputs.add(layers.get(i).forward(layers_Outputs.get(i-1)));
+
+        float[] resLayer_Output = null;
+        if(resLayer != null)
+            resLayer_Output = resLayer.forward(inputs);
+
+        outputs = new Object[2];
+        outputs[0] = layers_Outputs;
+        outputs[1] = resLayer_Output;
 
         // 保存中间输出
         if(saveHiddenLayerOutput){
-            hiddenLayerOutputMap.put(inputs, output);
+            hiddenLayerOutputMap.put(inputs, outputs);
         }
-        return output;
+        return outputs;
     }
 
     @Override
@@ -104,6 +124,9 @@ public class ResBlock extends Layer{
         this.input_width = input_width;
         this.input_height = input_height;
         this.input_dimension = input_Dimension;
+
+        if(resLayer != null )
+            resLayer.init(input_width, input_height, input_Dimension);
 
         Layer layer_0 = layers.get(0);
         layer_0.init(input_width, input_height, input_Dimension);
@@ -122,7 +145,10 @@ public class ResBlock extends Layer{
             this.output_dimension = outlayer.output_dimension;
         } else if(ResConnectType == ResConnectType_Concat){
             //残差连接方式1: 拼接
-            this.output_dimension = outlayer.output_dimension + this.input_dimension;
+            if(resLayer!=null)
+                this.output_dimension = outlayer.output_dimension + this.resLayer.output_dimension;
+            else
+                this.output_dimension = outlayer.output_dimension + this.input_dimension;
         }
     }
 
@@ -130,7 +156,8 @@ public class ResBlock extends Layer{
 
     @Override
     public float[][] backward(float[] inputs, float[] output, float[] deltas) {
-        ArrayList<float[]> output_list = forward_list(inputs);
+        Object[] outputs_obj = forward_list(inputs);
+        ArrayList<float[]> output_list = (ArrayList<float[]>) outputs_obj[0];
 
         float[] w_deltas = new float[getWeightNumber()];
         int index = 0;
@@ -147,28 +174,31 @@ public class ResBlock extends Layer{
                 resDeltas[i] = deltas[i];
             }
 
+            // layers反向传播
             back[0] = deltas;
-
             for(int i = output_list.size()-1; i > 0; i--) {
                 back = layers.get(i).backward(output_list.get(i - 1), output_list.get(i), back[0]);
-
-                if(back[1] == null) {
-                    System.out.println(Arrays.toString(back[1]) + "   " + layers.get(i));
-                    System.exit(0);
-                }
 
                 System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
                 index += back[1].length;
             }
 
             back = layers.get(0).backward(inputs, output_list.get(0), back[0]);
+            System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
+            index += back[1].length;
+
+            // resLayer_Output反向传播
+            if(resLayer != null){
+                float[] resLayer_Output = (float[]) outputs_obj[1];
+                float[][] resLayer_backs = resLayer.backward(inputs, resLayer_Output, resDeltas);
+                resDeltas = resLayer_backs[0];
+                System.arraycopy(resLayer_backs[1], 0, w_deltas, index, resLayer_backs[1].length);
+            }
 
             //加上残连接的梯度
             back[0] = MatrixUtil.add(back[0], resDeltas);
 
-            System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
-
-        } else
+        } else {
             if (ResConnectType == ResConnectType_Concat) {
                 //残差连接方式1: 拼接
                 float[] input_lastLayer;
@@ -204,13 +234,30 @@ public class ResBlock extends Layer{
                     //输入层
                     back = layers.get(0).backward(inputs, output_list.get(0), back[0]);
                     System.arraycopy(back[1], 0, w_deltas, index, back[1].length);
+                    index += back[1].length;
                 }
 
                 //for (int i = 0; i < back[0].length; i++)
                 //    back[0][i] += deltas[outLayer_dimension + i];
-                for (int i = 0; i < deltas.length - outLayer_dimension; i++)
-                    back[0][i] += deltas[outLayer_dimension + i];
+                if(resLayer != null){
+                    float[] resLayer_Output = (float[]) outputs_obj[1];
+
+                    float[] resDeltas = new float[deltas.length - outLayer_dimension];
+                    System.arraycopy(deltas, outLayer_dimension, resDeltas, 0, resDeltas.length);
+
+                    float[][] resLayer_backs = resLayer.backward(inputs, resLayer_Output, resDeltas);
+                    resDeltas = resLayer_backs[0];
+                    System.arraycopy(resLayer_backs[1], 0, w_deltas, index, resLayer_backs[1].length);
+
+                    for (int i = 0; i < resDeltas.length; i++)
+                        back[0][i] += resDeltas[i];
+
+                } else {
+                    for (int i = 0; i < deltas.length - outLayer_dimension; i++)
+                        back[0][i] += deltas[outLayer_dimension + i];
+                }
             }
+        }
 
         return new float[][]{back[0], w_deltas};
     }
@@ -222,23 +269,24 @@ public class ResBlock extends Layer{
         for(int i = 1; i < layers.size(); i++)
             outputs = layers.get(i).forward(outputs);
 
-        if(ResConnectType == ResConnectType_Add){
-            //残差连接方式0: 相加
-            if(this.input_dimension != this.output_dimension){
-                System.out.println(" ResBlock " + this.toString() + ": \n输入和输出的维度不一致。this.input_dimension != this.output_dimension!  input:"  );
-                System.exit(0);
-            } else {
-                //跨层连接
+        if(ResConnectType == ResConnectType_Add){//残差连接方式0: 相加
+            //跨层连接
+            if(resLayer != null)
+                outputs = MatrixUtil.add(outputs, resLayer.forward(inputs));
+            else
                 outputs = MatrixUtil.add(outputs, inputs);
 
-                for(int i = 0; i < outputs.length; i++)
-                    outputs[i] = activation_function.f(outputs[i]);
-            }
+            for(int i = 0; i < outputs.length; i++)
+                outputs[i] = activation_function.f(outputs[i]);
+
         } else if(ResConnectType == ResConnectType_Concat){
             for(int i = 0; i < outputs.length; i++)
                 outputs[i] = activation_function.f(outputs[i]);
             //残差连接方式1: 拼接 out = { out0, out1, out2, ..., outN, input0, intput1, ..., inputN}
-            outputs = MatrixUtil.combine(outputs, inputs);
+            if(resLayer != null)
+                outputs = MatrixUtil.combine(outputs, resLayer.forward(inputs));
+            else
+                outputs = MatrixUtil.combine(outputs, inputs);
         }
 
         return outputs;
@@ -256,6 +304,15 @@ public class ResBlock extends Layer{
                 layers.get(i).upgradeWeight(w_delta);
             }
         }
+
+        if(resLayer != null){
+            int w_number = resLayer.getWeightNumber();
+            if (w_number > 0) {
+                float[] w_delta = new float[w_number];
+                System.arraycopy(weightDeltas, index, w_delta, 0, w_number);
+                resLayer.upgradeWeight(w_delta);
+            }
+        }
     }
 
     int WeightNumber = -1;
@@ -265,6 +322,9 @@ public class ResBlock extends Layer{
             int number = 0;
             for (Layer layer : layers)
                 number += layer.getWeightNumber();
+
+            if(resLayer != null)
+                number += resLayer.getWeightNumber();
 
             WeightNumber = number;
         }
@@ -277,6 +337,9 @@ public class ResBlock extends Layer{
         for (Layer layer : layers)
             number += layer.getWeightNumber_Train();
 
+        if(resLayer != null)
+            number += resLayer.getWeightNumber_Train();
+
         return number;
     }
 
@@ -286,6 +349,9 @@ public class ResBlock extends Layer{
         for (Layer layer: layers){
             layer.setLearn_rate(learn_rate);
         }
+
+        if(resLayer != null)
+            resLayer.setLearn_rate(learn_rate);
     }
 
     @Override
@@ -293,6 +359,9 @@ public class ResBlock extends Layer{
         for (Layer layer: layers){
             layer.setDeltaOptimizer(deltaOptimizer);
         }
+
+        if(resLayer != null)
+            resLayer.setDeltaOptimizer(deltaOptimizer);
     }
 
     @Override
@@ -301,6 +370,9 @@ public class ResBlock extends Layer{
         for (Layer layer: layers){
             layer.setTrain(this.train);
         }
+
+        if(resLayer != null)
+            resLayer.setTrain(train);
     }
 
     @Override
@@ -321,6 +393,15 @@ public class ResBlock extends Layer{
         pw.println(SaveData.sInt("layer_number", layers.size()));
         for (Layer layer : layers)
             layer.saveInFile(pw);
+
+        int resLayer_flag = 0;
+        if(resLayer != null)
+            resLayer_flag = 1;
+
+        pw.println(SaveData.sInt("resLayer", resLayer_flag));
+
+        if(resLayer != null)
+            resLayer.saveInFile(pw);
     }
 
     @Override
@@ -347,6 +428,12 @@ public class ResBlock extends Layer{
 
             if(layers.size() == layer_num)
                 break;
+        }
+
+        int resLayer_flag = SaveData.getSInt(in.readLine());
+        if(resLayer_flag == 1) {
+            resLayer = getLayerById(SaveData.getSInt(in.readLine()));
+            resLayer.initByFile(in);
         }
 
         setLearn_rate(learn_rate);

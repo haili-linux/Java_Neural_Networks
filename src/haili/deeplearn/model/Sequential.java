@@ -71,7 +71,7 @@ public class Sequential extends Layer{
 
     }
 
-    public void addLayer(Layer layer){
+    public Sequential addLayer(Layer layer){
 
         if(layer == this){
             System.out.println(" error!");
@@ -104,6 +104,8 @@ public class Sequential extends Layer{
         output_dimension = layer.output_dimension;
         output_width = layer.output_width;
         output_height = layer.output_height;
+
+        return this;
     }
 
     @Override

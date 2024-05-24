@@ -124,7 +124,8 @@ public class Conv2D extends Layer{
     }
 
     private void init2(){
-        one_channel_dimension = output_width * output_height;
+        one_output_channel_dimension = output_width * output_height;
+        one_intput_channel_dimension = input_width * input_height;
         one_filter_wn = w[0][0].length * channels + 1;
 
         wn = (w[0][0].length * channels + 1) * filters;
@@ -142,7 +143,7 @@ public class Conv2D extends Layer{
 
         for(int filters_i = 0; filters_i < filters; filters_i++) {
 
-            int filters_dx = filters_i * one_channel_dimension;
+            int filters_dx = filters_i * one_output_channel_dimension;
 
             for (int channels_j = 0; channels_j < channels; channels_j++) {
 
@@ -150,16 +151,16 @@ public class Conv2D extends Layer{
 
                 //channel dx
                 for (int ik = 0; ik < k_index.length; ik++)
-                    k_index[ik] += channels_j * one_channel_dimension;
+                    k_index[ik] += channels_j * one_intput_channel_dimension;
 
                 int index = 0;
 
                 //one channel
-                for (int ih = 0; ih < output_height; ih++) {
+                for (int ih = 0; ih < output_height; ih++) { //output (filter, x, y)
                     for (int iw = 0; iw < output_width; iw++) {
 
+                        //output (filter, x, y)
                         index = filters_dx + (ih * output_width + iw);
-
 
                         for (int j = 0; j < w[filters_i][channels_j].length; j++) {
                             outputs[index] += inputs[k_index[j]] * w[filters_i][channels_j][j];
@@ -170,19 +171,19 @@ public class Conv2D extends Layer{
                                 k_index[j] += step;
                         }
 
+                        if(channels_j == channels-1)
+                            outputs[index] = activation_function.f(outputs[index] + bias[filters_i]);
                     }
                 }
 
-                if(channels_j == channels-1)
-                    outputs[index] = activation_function.f( outputs[index] + bias[filters_i] );
             }//end channels
         }//end filters
+
 
         return outputs;
     }
 
-
-    private int one_channel_dimension;
+    private int one_output_channel_dimension, one_intput_channel_dimension;
     private int one_filter_wn;
 
     /**
@@ -202,7 +203,7 @@ public class Conv2D extends Layer{
 
         for(int filters_i = 0; filters_i < filters; filters_i++) {
 
-            int filters_dx = filters_i * one_channel_dimension;
+            int filters_dx = filters_i * one_output_channel_dimension;
 			int w_index_dx = filters_i * one_filter_wn;
 
             for (int channels_j = 0; channels_j < channels; channels_j++) {
@@ -210,7 +211,7 @@ public class Conv2D extends Layer{
 				    int[] k_index = startConvIndex.clone();
 
                     for (int ik = 0; ik < k_index.length; ik++)
-                         k_index[ik] += channels_j * one_channel_dimension;
+                         k_index[ik] += channels_j * one_intput_channel_dimension;
 				
 					int w_channel_dx = w_index_dx + channels_j * w[filters_i][channels_j].length;	 
 			        int dxchannel = channels * w[0][0].length;
@@ -220,10 +221,12 @@ public class Conv2D extends Layer{
 
                             int index = filters_dx + ih * output_width + iw;
 
-                            deltas[index] *= activation_function.f_derivative(outputs[index]);
+                            if(channels_j == 0) {
+                                deltas[index] *= activation_function.f_derivative(outputs[index]);
 
-                            if(use_bias)
-                                w_delta[w_index_dx + dxchannel] += deltas[index];
+                                if (use_bias)
+                                    w_delta[w_index_dx + dxchannel] += deltas[index];
+                            }
 
                             for (int j = 0; j < w[filters_i][channels_j].length; j++) {
                                 float delta = deltas[index] * inputs[k_index[j]];
